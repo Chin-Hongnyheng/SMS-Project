@@ -136,7 +136,7 @@
 .sidebar {
   width: 280px;
   background-color: #5ba4d5;
-  height: 95%;
+  height: 100%;
   color: white;
   display: flex;
   flex-direction: column;
@@ -239,7 +239,8 @@
   padding: 0 30px;
   justify-content: space-evenly;
   align-items: center;
-  margin-bottom: 40px;
+  margin-bottom: 0px;
+  flex-shrink: 0;
   z-index: 10;
 }
 
@@ -277,6 +278,7 @@
   flex-grow: 1;
   overflow-y: auto;
   padding: 30px;
+  background-color: #fcfaf6;
 }
 
 @media (max-width: 768px) {
@@ -293,6 +295,20 @@
 a {
   text-decoration: none;
   color: black;
+}
+
+/* This removes default gaps from all elements */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Ensure the layout takes the full screen */
+body, html {
+  width: 100%;
+  height: 100%;
+  background-color: #fcfaf6; /* Match your beige background */
 }
 
 </style>

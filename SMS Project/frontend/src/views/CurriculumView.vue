@@ -5,7 +5,11 @@
 
     <!-- COURSE CARDS GRID -->
     <div class="course-grid">
-      <div v-for="course in courses" :key="course.id" class="course-card">
+      <div 
+        v-for="course in courses" 
+        :key="course.id" 
+        class="course-card"
+        @click="navigateToCourse(course.id)">
         <div class="course-icon-bg">
           <img :src="course.icon" alt="icon" />
         </div>
@@ -19,6 +23,13 @@
 
 <script setup>
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
+const navigateToCourse = (id) => {
+  router.push({ path: `/curriculum/${id}` });
+}
+
 import B1 from '@/assets/B1.png';
 import B2 from '@/assets/B2.png';
 import B3 from '@/assets/B3.png';
@@ -41,13 +52,14 @@ const courses = ref([
    margin-bottom: 10px;
  }
   .section-subtitle {
-    font-size: 20px;
+    font-size: 25px;
     color: #555;
     margin-bottom: 20px;
+    text-align: center;
   }
-  course-grid {
+  .course-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(400px, 2fr));
     gap: 20px;
   }
   .course-card {
@@ -57,6 +69,11 @@ const courses = ref([
     padding: 20px;
     text-align: center;
     transition: transform 0.2s;
+    cursor: pointer;
+  }
+  .course-card:last-child {
+    grid-column: span 2/span 1;
+    justify-self: center;
   }
   .course-card:hover {
     transform: translateY(-5px);
