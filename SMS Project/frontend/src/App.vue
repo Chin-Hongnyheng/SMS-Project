@@ -1,4 +1,4 @@
-<script setup lang="ts"></script>
+<!-- <script setup lang="ts"></script>
 
 <template>
   <h1>You did it!</h1>
@@ -9,4 +9,12 @@
   <div>helloworld</div>
 </template>
 
-<style scoped></style>
+<style scoped></style> -->
+
+<script setup>
+import Login from './views/auth/Login.vue'
+</script>
+
+<template>
+  <Login />
+</template>
