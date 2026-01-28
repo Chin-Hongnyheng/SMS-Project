@@ -1,9 +1,13 @@
+version: "3.8"
+
 services:
   backend:
     build: ./backend
     container_name: SMS-backend
     ports:
       - "3000:3000"
+    networks:
+      - "sms_network"
     depends_on:
       - postgres
     environment:
@@ -11,9 +15,9 @@ services:
       DB_PORT: 5432
       DB_USER: postgres
       DB_PASSWORD: postgres
-      DB_NAME: sms
+      DB_NAME: SMS
     volumes:
-      - ./backend:/app
+      - ./backend/uploads:/app/uploads
       - /app/node_modules
     command: npm run start:dev
   
@@ -22,12 +26,15 @@ services:
     container_name: SMS-frontend
     ports:
       - "5173:5173"
+    networks:
+      - "sms_network"
     depends_on:
       - backend
     volumes:
       - ./frontend:/app       
       - /app/node_modules
     command: npm run dev
+
   postgres:
     image: postgres:16
     container_name: sms-db
@@ -36,8 +43,14 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: sms
     ports:
-      - "5433:5432"
+      - "5432:5432"
+    networks:
+      - "sms_network"
     volumes:
       - pgdata:/var/lib/postgresql/data
 volumes:
-  pgdata: 
+  pgdata:
+
+networks:
+  sms_network:
+    driver: bridge
