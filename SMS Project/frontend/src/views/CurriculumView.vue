@@ -63,6 +63,7 @@ const courses = ref([
     gap: 20px;
   }
   .course-card {
+    min-width: 500px;
     background-color: #fff;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);

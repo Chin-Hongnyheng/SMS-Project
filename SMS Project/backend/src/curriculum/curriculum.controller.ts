@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { CurriculumService } from './curriculum.service';
 import { CreateCurriculumDto } from './dto/create-curriculum.dto';
@@ -21,8 +22,8 @@ export class CurriculumController {
   }
 
   @Get()
-  findAll() {
-    return this.curriculumService.findAll();
+  findAll(@Query('courseName') courseName?: string) {
+    if (courseName) return this.curriculumService.findByCourse(courseName);
   }
 
   @Get(':id')

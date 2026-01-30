@@ -136,14 +136,16 @@
 .sidebar {
   width: 280px;
   background-color: #5ba4d5;
-  height: 100%;
+  /* height: 100%; */
   color: white;
   display: flex;
+  min-height: 100vh;
   flex-direction: column;
   padding: 25px;
   border-radius: 20px 20px 20px 20px;
   transition: width 0.3s ease;
   flex-shrink: 0;
+  align-self: stretch;
 }
 
 .sidebar.collasped {

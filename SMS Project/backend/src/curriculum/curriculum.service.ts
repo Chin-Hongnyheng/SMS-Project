@@ -17,6 +17,14 @@ export class CurriculumService {
     return await this.subjectRepository.save(newSubject);
   }
 
+  async findByCourse(courseName: string) {
+    return await this.subjectRepository.find({
+      where: {
+        courseName: courseName,
+      },
+    });
+  }
+
   async findAll() {
     return await this.subjectRepository.find();
   }

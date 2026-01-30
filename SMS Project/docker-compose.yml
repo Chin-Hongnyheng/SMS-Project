@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   backend:
     build: ./backend
@@ -15,7 +13,7 @@ services:
       DB_PORT: 5432
       DB_USER: postgres
       DB_PASSWORD: postgres
-      DB_NAME: SMS
+      DB_NAME: sms
     volumes:
       - ./backend/uploads:/app/uploads
       - /app/node_modules
@@ -43,7 +41,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: sms
     ports:
-      - "5432:5432"
+      - "5436:5432"
     networks:
       - "sms_network"
     volumes:
