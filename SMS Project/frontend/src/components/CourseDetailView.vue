@@ -49,7 +49,7 @@
               <button @click="editSubject(subject)" class="icon-btn edit">
                 <font-awesome-icon :icon="['fas', 'pen']" />
               </button>
-              <button @click="deleteSubject(subject.id)" class="icon-btn delete">
+              <button @click="confirmDelete(subject.id)" class="icon-btn delete">
                 <font-awesome-icon icon="fas fa-trash" />
               </button>
             </td>
@@ -75,7 +75,11 @@
 
         <transition name="slide">
           <div v-if="activeYear === yearNum" class="subjects-list">
-             <div v-for="subject in getSubjectsByYear(yearNum)" :key="subject.id" class="subject-row">
+             <div v-for="subject in getSubjectsByYear(yearNum)" 
+              :key="subject.id"
+              class="subject-row clickable"
+              @click="$router.push(`/curriculum/subject/${subject.id}`)"
+              >
                 <div class="sub-info">
                   <span class="sub-code">{{ subject.code }}</span>
                   <span class="sub-name">{{ subject.name }}</span>
@@ -101,11 +105,13 @@
 
     <!-- 3. ADD/EDIT MODAL -->
     <div v-if="showModal" class="modal-overlay">
-      <div class="modal-content">
+      <div class="modal-content large">
         <h2>{{ isEditing ? 'Edit Subject' : 'Add New Subject' }}</h2>
         <input v-model="newSubject.name" placeholder="Subject Name" class="form-input" />
         <input v-model="newSubject.code" placeholder="Code (e.g. ANA101)" class="form-input" />
-        <textarea v-model="newSubject.description" placeholder="Requirements/Info/Labs details..." class="form-input" rows="3"></textarea>
+        
+        <p class="label">Course Description (Mardown):</p>
+        <MdEditor v-model="newSubject.description" language="en-US" />
         
         <div class="form-row">
           <input type="number" v-model="newSubject.lectureHours" placeholder="Lec Hours" />
@@ -132,12 +138,27 @@
       </div>
     </div>
   </div>
+  <!-- Delete Confirmation Screen -->
+  <div v-if="showDeleteModal" class="modal-overlay">
+  <div class="modal-content delete-modal">
+    <div class="warning-icon">⚠️</div>
+    <h2>Are you sure?</h2>
+    <p>This will permanently delete this subject from the roadmap. This action cannot be undone.</p>
+    
+    <div class="modal-actions">
+      <button @click="showDeleteModal = false" class="cancel-btn">No, Cancel</button>
+      <button @click="executeDelete" class="confirm-delete-btn">Yes, Delete it</button>
+    </div>
+  </div>
+</div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import axios from 'axios';
+import { MdEditor } from 'md-editor-v3';
+import 'md-editor-v3/lib/style.css';
 
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faPen, faTrash, faCircleArrowLeft, faChevronUp, faChevronDown } from '@fortawesome/free-solid-svg-icons';
@@ -155,6 +176,8 @@ const activeYear = ref<number | null>(null);
 const showModal = ref(false);
 const isEditing = ref(false);
 const currentEditingId = ref<number | null>(null);
+const showDeleteModal = ref(false);
+const subjectToDeleteId = ref<number | null>(null);
 
 const courses: Record<number, string> = {
   1: 'Bachelor degree in Nursing and Midwifery',
@@ -170,15 +193,25 @@ const newSubject = ref({
 
 const fetchSubjects = async () => {
   try {
-    const response = await axios.get('http://localhost:3000/curriculum');
-    subjects.value = response.data.filter((s: any) => s.courseName === courses[courseId]);
-  } catch (error) { console.error(error); }
-};
+    const targetCourse = courses[courseId];
+    
+    // Send the courseName as a query parameter
+    const response = await axios.get('http://localhost:3000/curriculum', {
+      params: { courseName: targetCourse }
+    });
 
-const openAddModal = () => {
-  isEditing.value = false;
-  newSubject.value = { name: '', code: '', lectureHours: 0, labHours: 0, year: 1, semester: 1, description: '', courseName: courses[courseId] };
-  showModal.value = true;
+    if (Array.isArray(response.data)) {
+      subjects.value = response.data;
+      console.log("Subjects loaded:", subjects.value.length);
+    }
+  }
+    catch (error) {
+  if (axios.isAxiosError(error)) {
+    console.error("Error fetching data:", error.response?.data);
+  } else {
+    console.error("Unexpected error:", error);
+  }
+}
 };
 
 const editSubject = (subject: any) => {
@@ -206,12 +239,23 @@ const saveSubject = async () => {
   } catch (error) { alert("Error saving"); }
 };
 
-const deleteSubject = async (id: number) => {
-  if (confirm("Delete this subject forever?")) {
+// 1. This just opens the box
+const confirmDelete = (id: number) => {
+  subjectToDeleteId.value = id;
+  showDeleteModal.value = true;
+};
+
+// 2. This actually talks to the backend
+const executeDelete = async () => {
+  if (subjectToDeleteId.value) {
     try {
-      await axios.delete(`http://localhost:3000/curriculum/${id}`);
-      fetchSubjects();
-    } catch (error) { alert("Delete failed"); }
+      await axios.delete(`http://localhost:3000/curriculum/${subjectToDeleteId.value}`);
+      showDeleteModal.value = false;
+      subjectToDeleteId.value = null;
+      fetchSubjects(); // Refresh the list
+    } catch (error) {
+      alert("Failed to delete subject.");
+    }
   }
 };
 
@@ -255,9 +299,10 @@ onMounted(() => {
   background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;
 }
 .modal-content { background: white; padding: 30px; border-radius: 15px; width: 400px; }
-.form-input { width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #ddd; }
-.form-row { display: flex; gap: 10px; margin-bottom: 15px; }
-.form-row input, .form-row select { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #ddd; }
+.modal-content.large { width: 800px; max-height: 90vh; overflow-y: auto; }
+.label { margin-top: 10px; font-weight: bold; color: #666; }
+.form-row { display: flex; gap: 10px; margin-bottom: 15px;}
+.form-row input, .form-row select { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #ddd;}
 .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
 .save-btn { background: #5ba4d5; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
 .cancel-btn { background: #eee; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
@@ -282,6 +327,51 @@ onMounted(() => {
 .requirements-box { margin-top: 40px; padding: 20px; border: 1px dashed #ccc; border-radius: 10px; background: #fcfaf6; }
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
 .modal-content { background: white; padding: 30px; border-radius: 15px; width: 450px; }
-.form-input { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #ddd; }
+.form-input { width: 100%; padding: 10px 16px ; margin-bottom: 10px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box;}
 .form-row { display: flex; gap: 10px; margin-bottom: 10px; }
+
+.delete-modal {
+  text-align: center;
+  width: 350px !important;
+}
+
+.warning-icon {
+  font-size: 3rem;
+  margin-bottom: 10px;
+}
+
+.delete-modal h2 {
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.delete-modal p {
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 25px;
+  line-height: 1.4;
+}
+
+.confirm-delete-btn {
+  background-color: #e74c3c; /* Red color for danger */
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.confirm-delete-btn:hover {
+  background-color: #c0392b;
+}
+
+.cancel-btn {
+  background-color: #eee;
+  color: #333;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+}
 </style>
