@@ -108,11 +108,11 @@ const emit = defineEmits<{
 
 <style scoped>
 .panel {
-  background: rgba(255, 255, 255, 0.82);
-  border-radius: 20px;
+  background: #ffffff;
+  border-radius: 16px;
   padding: 24px 26px 28px;
-  box-shadow: 0 12px 24px rgba(19, 31, 54, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
+  border: 1px solid #eef1f5;
   display: grid;
   gap: 18px;
 }
@@ -122,7 +122,7 @@ const emit = defineEmits<{
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  font-family: 'Space Grotesk', sans-serif;
+  flex-wrap: wrap;
 }
 
 .panel-actions {
@@ -188,23 +188,23 @@ const emit = defineEmits<{
   font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.02em;
-  color: #6c7784;
+  color: #5b616b;
 }
 
 .panel-title h1 {
-  font-size: 1.6rem;
+  font-size: 1.5rem;
   margin: 0;
 }
 
 .add-btn {
   border: none;
-  background: #5aa9d6;
+  background: #5ba4d5;
   color: #ffffff;
   padding: 10px 18px;
   border-radius: 12px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 10px 18px rgba(90, 169, 214, 0.28);
+  box-shadow: 0 10px 18px rgba(91, 164, 213, 0.28);
 }
 
 .card {
@@ -284,8 +284,8 @@ const emit = defineEmits<{
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #5aa9d6;
-  box-shadow: 0 0 0 4px rgba(90, 169, 214, 0.2);
+  background: #5ba4d5;
+  box-shadow: 0 0 0 4px rgba(91, 164, 213, 0.2);
 }
 
 .cell.id {
@@ -347,8 +347,8 @@ const emit = defineEmits<{
 }
 
 .day.check input:checked + span {
-  background: #5aa9d6;
-  border-color: #5aa9d6;
+  background: #5ba4d5;
+  border-color: #5ba4d5;
   box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.8);
 }
 

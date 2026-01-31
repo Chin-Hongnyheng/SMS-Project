@@ -1,489 +1,316 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import Sidebar from './components/Sidebar.vue'
-import Topbar from './components/Topbar.vue'
-import AttendanceTable from './components/AttendanceTable.vue'
+  
+  import { RouterView, RouterLink } from 'vue-router';
+  import { ref } from 'vue';
 
-type StudentRow = { id: string; name: string; presentDays: number[] }
-type ClassOption = { id: number; name: string }
+  const fas = {
+    house: 'house',
+    academic: 'graduation-cap',
+    admissions: 'building-columns',
+    report: 'chart-simple',
+    examination: 'clipboard-list',
+    attendance: 'user-check',
+    registration: 'user-plus',
+    account: 'circle-user',
+    transcript: 'rectangle-list',
+    bar: 'bars',
+    student: 'user-graduate',
+    logout: 'angle-right',
+    notification: 'bell',
+    message: 'comment-dots',
+  };
 
-const days = ref<number[]>([])
-const students = ref<StudentRow[]>([])
-const classes = ref<ClassOption[]>([])
-const selectedClassId = ref<number | null>(null)
-const currentMonth = ref('')
-const selectedMonth = ref('')
-const apiBaseUrl = 'http://localhost:8000'
-const isModalOpen = ref(false)
-const searchQuery = ref('')
-const formName = ref('')
-const formCode = ref('')
-const formError = ref('')
-const isSubmitting = ref(false)
-const isClassModalOpen = ref(false)
-const className = ref('')
-const classError = ref('')
-const isClassSubmitting = ref(false)
-const studentClassId = ref<number | null>(null)
+  const isCollapsed = ref(false);
 
-const canSubmit = computed(() => formName.value.trim() !== '' && formCode.value.trim() !== '')
-const canCreateClass = computed(() => className.value.trim() !== '')
-const filteredStudents = computed(() => {
-  const query = searchQuery.value.trim().toLowerCase()
-  if (!query) return students.value
-  return students.value.filter((student) => student.name.toLowerCase().includes(query))
-})
-
-const fetchAttendance = async () => {
-  const now = new Date()
-  const monthValue =
-    selectedMonth.value || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-  selectedMonth.value = monthValue
-  currentMonth.value = monthValue
-  const classQuery = selectedClassId.value ? `&classId=${selectedClassId.value}` : ''
-  const response = await fetch(`${apiBaseUrl}/attendance?month=${monthValue}${classQuery}`)
-  if (!response.ok) {
-    throw new Error('Failed to load attendance')
-  }
-  const data = await response.json()
-  days.value = data.days ?? []
-  students.value = data.students ?? []
-}
-
-const openModal = () => {
-  formName.value = ''
-  formCode.value = ''
-  formError.value = ''
-  studentClassId.value = selectedClassId.value
-  isModalOpen.value = true
-}
-
-const closeModal = () => {
-  if (isSubmitting.value) return
-  isModalOpen.value = false
-}
-
-const openClassModal = () => {
-  className.value = ''
-  classError.value = ''
-  isClassModalOpen.value = true
-}
-
-const closeClassModal = () => {
-  if (isClassSubmitting.value) return
-  isClassModalOpen.value = false
-}
-
-const submitStudent = async () => {
-  if (!canSubmit.value || isSubmitting.value) return
-  isSubmitting.value = true
-  formError.value = ''
-
-  try {
-    const response = await fetch(`${apiBaseUrl}/students`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        fullName: formName.value.trim(),
-        studentCode: formCode.value.trim(),
-        classId: studentClassId.value ?? undefined,
-      }),
-    })
-
-    if (!response.ok) {
-      formError.value = 'Failed to add student'
-      return
-    }
-
-    await fetchAttendance()
-    isModalOpen.value = false
-  } catch (error) {
-    formError.value = 'Failed to add student'
-  } finally {
-    isSubmitting.value = false
-  }
-}
-
-const submitClass = async () => {
-  if (!canCreateClass.value || isClassSubmitting.value) return
-  isClassSubmitting.value = true
-  classError.value = ''
-
-  try {
-    const response = await fetch(`${apiBaseUrl}/classes`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: className.value.trim() }),
-    })
-
-    if (!response.ok) {
-      classError.value = 'Failed to add class'
-      return
-    }
-
-    await fetchClasses()
-    isClassModalOpen.value = false
-  } catch (error) {
-    classError.value = 'Failed to add class'
-  } finally {
-    isClassSubmitting.value = false
-  }
-}
-
-onMounted(() => {
-  fetchClasses()
-    .then(fetchAttendance)
-    .catch(() => {
-      days.value = Array.from({ length: 31 }, (_, index) => index + 1)
-      students.value = []
-    })
-})
-
-const fetchClasses = async () => {
-  const response = await fetch(`${apiBaseUrl}/classes`)
-  if (!response.ok) {
-    throw new Error('Failed to load classes')
-  }
-  const data = await response.json()
-  classes.value = Array.isArray(data) ? data : []
-  if (!selectedClassId.value && classes.value.length > 0) {
-    selectedClassId.value = classes.value[0].id
-  }
-  if (!studentClassId.value && selectedClassId.value) {
-    studentClassId.value = selectedClassId.value
-  }
-}
-
-const handleClassSelect = (id: number) => {
-  if (selectedClassId.value === id) return
-  selectedClassId.value = id
-  fetchAttendance().catch(() => {
-    students.value = []
-  })
-}
-
-const handleMonthSelect = (value: string) => {
-  selectedMonth.value = value
-  fetchAttendance().catch(() => {
-    students.value = []
-  })
-}
-
-const handleDeleteStudent = async (studentId: string) => {
-  if (!selectedClassId.value) return
-  const confirmed = window.confirm('Remove this student from the class?')
-  if (!confirmed) return
-
-  const response = await fetch(
-    `${apiBaseUrl}/classes/${selectedClassId.value}/students/${encodeURIComponent(studentId)}`,
-    { method: 'DELETE' },
-  )
-
-  if (!response.ok) {
-    window.alert('Failed to remove student')
-    return
+  const toggleSidebar = () => {
+    isCollapsed.value = !isCollapsed.value;
   }
 
-  await fetchAttendance()
-}
-
-const handleDeleteClass = async () => {
-  if (!selectedClassId.value) return
-  const input = window.prompt('Type CONFIRM to delete this class')
-  if (!input || input.toLowerCase() !== 'confirm') {
-    return
-  }
-
-  const response = await fetch(
-    `${apiBaseUrl}/classes/${selectedClassId.value}?confirm=confirm`,
-    { method: 'DELETE' },
-  )
-
-  if (!response.ok) {
-    window.alert('Failed to remove class')
-    return
-  }
-
-  await fetchClasses()
-  if (!classes.value.find((item) => item.id === selectedClassId.value)) {
-    selectedClassId.value = classes.value[0]?.id ?? null
-  }
-  await fetchAttendance()
-}
-
-const handleToggleAttendance = async (payload: { studentId: string; day: number; present: boolean }) => {
-  if (!selectedClassId.value) return
-  const monthValue =
-    selectedMonth.value || `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`
-  const date = `${monthValue}-${String(payload.day).padStart(2, '0')}`
-
-  const response = await fetch(`${apiBaseUrl}/attendance`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      classId: selectedClassId.value,
-      studentCode: payload.studentId,
-      attendanceDate: date,
-      present: payload.present,
-    }),
-  })
-
-  if (!response.ok) {
-    window.alert('Failed to update attendance')
-    return
-  }
-
-  const target = students.value.find((student) => student.id === payload.studentId)
-  if (!target) return
-  if (payload.present) {
-    if (!target.presentDays.includes(payload.day)) {
-      target.presentDays.push(payload.day)
-    }
-  } else {
-    target.presentDays = target.presentDays.filter((day) => day !== payload.day)
-  }
-}
 </script>
 
 <template>
-  <div class="page">
-    <Sidebar />
-    <main class="content">
-      <Topbar v-model="searchQuery" />
-      <AttendanceTable
-        :days="days"
-        :students="filteredStudents"
-        :classes="classes"
-        :selected-class-id="selectedClassId"
-        :selected-month="selectedMonth"
-        @add-student="openModal"
-        @add-class="openClassModal"
-        @delete-class="handleDeleteClass"
-        @select-class="handleClassSelect"
-        @select-month="handleMonthSelect"
-        @delete-student="handleDeleteStudent"
-        @toggle-attendance="handleToggleAttendance"
-      />
-    </main>
-
-    <div v-if="isModalOpen" class="modal-backdrop" @click="closeModal">
-      <div class="modal" @click.stop>
-        <div class="modal-header">
-          <h2>Add Student</h2>
-          <button class="modal-close" type="button" @click="closeModal">✕</button>
-        </div>
-        <div class="modal-body">
-          <label class="modal-field">
-            <span>Student Name</span>
-            <input v-model="formName" type="text" placeholder="Student name" />
-          </label>
-          <label class="modal-field">
-            <span>Student ID</span>
-            <input v-model="formCode" type="text" placeholder="ST-011" />
-          </label>
-          <label class="modal-field">
-            <span>Class</span>
-            <select v-model="studentClassId">
-              <option v-for="klass in classes" :key="klass.id" :value="klass.id">
-                {{ klass.name }}
-              </option>
-            </select>
-          </label>
-          <p v-if="formError" class="modal-error">{{ formError }}</p>
-        </div>
-        <div class="modal-actions">
-          <button class="ghost" type="button" @click="closeModal">Cancel</button>
-          <button class="primary" type="button" :disabled="!canSubmit || isSubmitting" @click="submitStudent">
-            {{ isSubmitting ? 'Saving...' : 'Save' }}
-          </button>
-        </div>
+    <div class="app-layout">
+  
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar" :class="{ 'collasped': isCollapsed }">
+      <div class="logo-section">
+        <img src="@/assets/logortc.png" alt="RTC Logo" class="logo-img" />
+        <h2 v-if="!isCollapsed" class="logo-title">BATTAMBANG REGIONAL TRAINING CENTER</h2>
       </div>
-    </div>
 
-    <div v-if="isClassModalOpen" class="modal-backdrop" @click="closeClassModal">
-      <div class="modal" @click.stop>
-        <div class="modal-header">
-          <h2>Add Class</h2>
-          <button class="modal-close" type="button" @click="closeClassModal">✕</button>
-        </div>
-        <div class="modal-body">
-          <label class="modal-field">
-            <span>Class Name</span>
-            <input v-model="className" type="text" placeholder="Class C" />
-          </label>
-          <p v-if="classError" class="modal-error">{{ classError }}</p>
-        </div>
-        <div class="modal-actions">
-          <button class="ghost" type="button" @click="closeClassModal">Cancel</button>
-          <button class="primary" type="button" :disabled="!canCreateClass || isClassSubmitting" @click="submitClass">
-            {{ isClassSubmitting ? 'Saving...' : 'Save' }}
+      <nav class="menu">
+        <RouterLink to="/" class="menu-item" active-class="active">
+          <font-awesome-icon :icon="fas.house" class="menu-icon"/>
+          <span v-if="!isCollapsed">Dashboard</span>
+        </RouterLink>
+
+        <RouterLink to="/curriculum" class="menu-item" active-class="active">
+          <font-awesome-icon :icon="fas.academic" class="menu-icon"/>
+          <span v-if="!isCollapsed">Academic</span>
+        </RouterLink>
+
+        <RouterLink to="/admission" class="menu-item" active-class="active">
+          <font-awesome-icon :icon="fas.admissions" class="menu-icon"/>
+          <span v-if="!isCollapsed">Admission</span>
+        </RouterLink>
+
+        <RouterLink to="/student" class="menu-item" active-class="active">
+          <font-awesome-icon :icon="fas.student" class="menu-icon"/>
+          <span v-if="!isCollapsed">Student</span>
+        </RouterLink>
+
+        <router-link to="/examination" class="menu-item" active-class="active">
+          <font-awesome-icon :icon="fas.examination" class="menu-icon"/>
+          <span v-if="!isCollapsed">Examination</span>
+        </router-link>
+
+        <router-link to="/attendance" class="menu-item" active-class="active">
+          <font-awesome-icon :icon="fas.attendance" class="menu-icon"/>
+          <span v-if="!isCollapsed">Attendance</span>
+        </router-link>
+
+        <router-link to="/transcript" class="menu-item" active-class="active">
+          <font-awesome-icon :icon="fas.transcript" class="menu-icon"/>
+          <span v-if="!isCollapsed">Transcript</span>
+        </router-link>
+
+        <router-link to="/registration" class="menu-item" active-class="active">
+          <font-awesome-icon :icon="fas.registration" class="menu-icon"/>
+          <span v-if="!isCollapsed">Registration</span>
+        </router-link>
+
+        <router-link to="/report" class="menu-item" active-class="active">
+          <font-awesome-icon :icon="fas.report" class="menu-icon"/>
+          <span v-if="!isCollapsed">Report</span>
+        </router-link>
+
+        <router-link to="/account" class="menu-item" active-class="active">
+          <font-awesome-icon :icon="fas.account" class="menu-icon"/>
+          <span v-if="!isCollapsed">Account</span>
+        </router-link>
+      </nav>
+
+      <button class="logout-btn">
+        <span v-if="!isCollapsed">Logout</span>
+        <font-awesome-icon :icon="fas.logout" class="menu-icon"/>
+      </button>
+    </aside>
+
+    <div class="main-content">
+      <!-- TOP SEARCH BAR -->
+      <header class="top-bar">
+        <div class="left-header">
+          <button @click="toggleSidebar" class="toggle-btn">
+            <font-awesome-icon :icon="fas.bar" class="menu-icon"/>
           </button>
+          <div class="search-container">
+            <input type="text" placeholder="Search" />
+          </div>
         </div>
-      </div>
+
+        <div class="top-icons">
+          <span><font-awesome-icon :icon="fas.notification" class="top-bar-icon"/></span>
+          <span><font-awesome-icon :icon="fas.message" class="top-bar-icon"/></span>
+          <span><font-awesome-icon :icon="fas.account" class="top-bar-icon"/></span>
+        </div>
+      </header>
+
+      <!-- Main Content -->
+      <main class="page-content">
+        <RouterView/>
+      </main>
     </div>
-  </div>
+  </div>    
 </template>
 
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Karla:wght@400;500&display=swap');
-
-:root {
-  color-scheme: light;
+<style scoped>
+.app-layout {
+  display: flex;
+  width: 100vw;
+  height: 150vh;
+  overflow: hidden;
+  background-color: #fcfaf6;
+  font-family: 'Inter', sans-serif;
 }
 
+.sidebar {
+  width: 280px;
+  background-color: #5ba4d5;
+  /* height: 100%; */
+  color: white;
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+  padding: 25px;
+  border-radius: 20px 20px 20px 20px;
+  transition: width 0.3s ease;
+  flex-shrink: 0;
+  align-self: stretch;
+}
+
+.sidebar.collasped {
+  width: 80px;
+  padding: 20px 10px;
+}
+.logo-section {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.logo-img {
+  width: 80%;
+  max-width: 120px;
+  transition: width 0.3s ;
+}
+
+.logo-section h2 {
+  font-size: 1.15rem;
+  font-weight: bold;
+  line-height: 1.2;
+}
+
+.icon-logo {
+    width: 30px;
+    margin-right: 15px
+}
+.menu {
+  flex-grow: 1;
+  margin-top: 10px;
+}
+
+.menu-item {
+  color: white; 
+  padding: 12px;
+  margin-bottom: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  font-size: 1.15rem;
+  transition: 0.3s;
+  gap: 15px;
+  white-space: nowrap; /* Prevent text wrap */
+}
+
+.sidebar.collasped .menu-item span {
+  justify-content: center;
+  gap: 0;
+}
+
+.menu-icon {
+  font-size: 26px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.active {
+  background-color: #a0d2eb;
+  color: black !important;
+  text-decoration: none;
+  border-radius: 10px;
+  font-weight: bold;
+}
+
+.logout-btn {
+  background-color: #a0d2eb;
+  border: none;
+  padding: 12px 15px;
+  border-radius: 10px;
+  font-weight: bold;
+  font-size: 1.15rem;
+  text-align: center;
+  color: black;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.main-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 30px;
+  background-color: #fcfaf6;
+}
+
+.top-bar {
+  height: 70px;
+  width: 1150px;
+  display: flex;
+  padding: 0 30px;
+  justify-content: space-evenly;
+  align-items: center;
+  margin-bottom: 0px;
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.left-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.toggle-btn {
+  font-size: 1.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #5ba4d5;
+}
+
+.top-bar-icon {
+  font-size: 1.5rem;
+  gap: 20px;
+  cursor: pointer;
+  color: #5ba4d5;
+}
+
+.search-container input {
+  width: 800px;
+  height: 40px;
+  padding-left: 15px;
+  border-radius: 10px;
+  background-color: #efefef;
+  border: none
+}
+
+.page-content {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 30px;
+  background-color: #fcfaf6;
+}
+
+@media (max-width: 768px) {
+  .sidebar:not(.collasped) {
+    position: absolute;
+    z-index: 100;
+  }
+
+  .search-container input {
+    width: 300px;
+  }
+}
+
+a {
+  text-decoration: none;
+  color: black;
+}
+
+/* This removes default gaps from all elements */
 * {
+  margin: 0;
+  padding: 0;
   box-sizing: border-box;
 }
 
-body {
-  margin: 0;
-  background: #e9edf2;
-  color: #1b1b1b;
-  font-family: 'Karla', 'Space Grotesk', sans-serif;
+/* Ensure the layout takes the full screen */
+body, html {
+  width: 100%;
+  height: 100%;
+  background-color: #fcfaf6; /* Match your beige background */
 }
 
-#app {
-  min-height: 100vh;
-}
-
-.page {
-  min-height: 100vh;
-  display: grid;
-  grid-template-columns: 260px 1fr;
-  background: linear-gradient(130deg, #f6f7fb 0%, #f1ece7 55%, #f6f2ee 100%);
-  position: relative;
-  overflow: hidden;
-}
-
-.page::after {
-  content: '';
-  position: absolute;
-  width: 420px;
-  height: 420px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(96, 176, 224, 0.2), rgba(96, 176, 224, 0));
-  top: -100px;
-  right: 40px;
-  pointer-events: none;
-}
-
-.content {
-  padding: 28px 36px;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  position: relative;
-  z-index: 1;
-}
-
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(10, 24, 35, 0.45);
-  display: grid;
-  place-items: center;
-  z-index: 10;
-  padding: 16px;
-}
-
-.modal {
-  background: #ffffff;
-  border-radius: 18px;
-  width: min(420px, 100%);
-  box-shadow: 0 20px 40px rgba(15, 26, 44, 0.2);
-  padding: 18px 20px 20px;
-  display: grid;
-  gap: 16px;
-}
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-family: 'Space Grotesk', sans-serif;
-}
-
-.modal-header h2 {
-  margin: 0;
-  font-size: 1.25rem;
-}
-
-.modal-close {
-  border: none;
-  background: transparent;
-  font-size: 1.2rem;
-  cursor: pointer;
-}
-
-.modal-body {
-  display: grid;
-  gap: 12px;
-}
-
-.modal-field {
-  display: grid;
-  gap: 6px;
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-
-.modal-field input {
-  border: 1px solid #e1e3ea;
-  background: #fcfcfd;
-  border-radius: 10px;
-  padding: 8px 10px;
-  font-family: inherit;
-  font-size: 0.95rem;
-}
-
-.modal-field select {
-  border: 1px solid #e1e3ea;
-  background: #fcfcfd;
-  border-radius: 10px;
-  padding: 8px 10px;
-  font-family: inherit;
-  font-size: 0.95rem;
-}
-
-.modal-error {
-  margin: 0;
-  color: #b0403a;
-  font-weight: 600;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.ghost {
-  border: 1px solid #d9dfe7;
-  background: transparent;
-  padding: 8px 16px;
-  border-radius: 10px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-@media (max-width: 1100px) {
-  .page {
-    grid-template-columns: 220px 1fr;
-  }
-}
-
-@media (max-width: 900px) {
-  .page {
-    grid-template-columns: 1fr;
-  }
-
-  .content {
-    padding: 20px;
-  }
-}
 </style>
