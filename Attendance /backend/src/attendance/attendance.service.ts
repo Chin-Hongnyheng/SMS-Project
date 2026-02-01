@@ -169,7 +169,10 @@ export class AttendanceService {
       throw new Error('Class not found')
     }
 
-    const student = await this.studentRepo.findOne({ where: { studentCode: payload.studentCode } })
+    const student = await this.studentRepo.findOne({
+      where: { studentCode: payload.studentCode },
+      relations: { classEntity: true },
+    })
     if (!student) {
       return { removed: false }
     }
