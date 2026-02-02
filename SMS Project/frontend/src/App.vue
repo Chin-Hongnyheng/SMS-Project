@@ -127,16 +127,16 @@
 .app-layout {
   display: flex;
   width: 100vw;
-  height: 150vh;
-  overflow: hidden;
+  height: 100vh;
   background-color: #fcfaf6;
   font-family: 'Inter', sans-serif;
+  /* overflow: hidden; */
 }
 
 .sidebar {
   width: 280px;
   background-color: #5ba4d5;
-  /* height: 100%; */
+  height: 120%;
   color: white;
   display: flex;
   min-height: 100vh;
@@ -232,11 +232,13 @@
   min-width: 0;
   padding: 30px;
   background-color: #fcfaf6;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .top-bar {
   height: 70px;
-  width: 1150px;
+  width: 100%;
   display: flex;
   padding: 0 30px;
   justify-content: space-evenly;
@@ -281,6 +283,9 @@
   overflow-y: auto;
   padding: 30px;
   background-color: #fcfaf6;
+
+  scrollbar-width: thin;
+  scrollbar-color: #fcfaf6;
 }
 
 @media (max-width: 768px) {
@@ -299,18 +304,17 @@ a {
   color: black;
 }
 
-/* This removes default gaps from all elements */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-/* Ensure the layout takes the full screen */
 body, html {
   width: 100%;
   height: 100%;
-  background-color: #fcfaf6; /* Match your beige background */
+  background-color: #fcfaf6;
+  overflow: hidden;
 }
 
 </style>

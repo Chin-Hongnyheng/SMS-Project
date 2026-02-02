@@ -1,4 +1,7 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Assignment } from './assignment.entity';
+import { Lecture } from './lecture.entity';
+import { Announcement } from './announcement.entity';
 
 @Entity('subjects')
 export class Subject {
@@ -8,7 +11,7 @@ export class Subject {
   @Column()
   name: string;
 
-  @Column()
+  @Column({ type: 'text', nullable: true })
   description: string;
 
   @Column()
@@ -28,4 +31,13 @@ export class Subject {
 
   @Column()
   courseName: string;
+
+  @OneToMany(() => Assignment, (assignment) => assignment.subject)
+  assignments: Assignment[];
+
+  @OneToMany(() => Lecture, (lecture) => lecture.subject)
+  lectures: Lecture[];
+
+  @OneToMany(() => Announcement, (announcement) => announcement.subject)
+  announcements: Announcement[];
 }

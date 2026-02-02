@@ -163,7 +163,7 @@ import 'md-editor-v3/lib/style.css';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faPen, faTrash, faCircleArrowLeft, faChevronUp, faChevronDown } from '@fortawesome/free-solid-svg-icons';
 
-// You MUST add them to the library here
+// library here
 library.add(faPen, faTrash, faCircleArrowLeft, faChevronUp, faChevronDown);
 
 const route = useRoute();

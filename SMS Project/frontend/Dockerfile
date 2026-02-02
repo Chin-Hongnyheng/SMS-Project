@@ -7,7 +7,7 @@ RUN npm install
 
 COPY . .
 
-# RUN npm run build
+RUN mkdir -p uploads/lectures
 
 EXPOSE 5173
 

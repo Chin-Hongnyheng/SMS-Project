@@ -15,6 +15,7 @@ services:
       DB_PASSWORD: postgres
       DB_NAME: sms
     volumes:
+      - ./backend:/app
       - ./backend/uploads:/app/uploads
       - /app/node_modules
     command: npm run start:dev
