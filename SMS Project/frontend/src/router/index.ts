@@ -1,13 +1,20 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import CurriculumView from '../views/CurriculumView.vue'
+import StudentDashboard from '../views/StudentDashboard.vue'
+import StudentList from '../views/StudentList.vue'
+// import StudentDashboard from '@/views/StudentDashboard.vue'
 
 const router = createRouter({
-
-  history: createWebHistory('/'),
+  history: createWebHistory(),  
   routes: [
     {
       path: '/',
-      redirect: '/home',
+      redirect: '/admin'         
+    },
+    {
+      path: '/admin',
+      name: 'StudentDashboard',
+      component: StudentDashboard
     },
     {
       path: '/curriculum',
@@ -18,6 +25,11 @@ const router = createRouter({
       path: '/curriculum/:id',
       name: 'course-details',
       component: () => import('../views/CourseDetailView.vue')
+    },
+    {
+      path: '/student',
+      name: 'student',
+      component: StudentList
     }
   ]
 })

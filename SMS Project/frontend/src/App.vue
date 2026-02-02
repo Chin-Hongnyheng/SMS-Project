@@ -39,7 +39,7 @@
       </div>
 
       <nav class="menu">
-        <RouterLink to="/" class="menu-item" active-class="active">
+        <RouterLink to="/admin" class="menu-item" active-class="active">
           <font-awesome-icon :icon="fas.house" class="menu-icon"/>
           <span v-if="!isCollapsed">Dashboard</span>
         </RouterLink>
@@ -49,45 +49,45 @@
           <span v-if="!isCollapsed">Academic</span>
         </RouterLink>
 
-        <Routerlink to="/admission" class="menu-item" active-class="active">
+        <RouterLink to="/admission" class="menu-item" active-class="active">
           <font-awesome-icon :icon="fas.admissions" class="menu-icon"/>
           <span v-if="!isCollapsed">Admission</span>
-        </Routerlink>
+        </RouterLink>
 
         <RouterLink to="/student" class="menu-item" active-class="active">
           <font-awesome-icon :icon="fas.student" class="menu-icon"/>
           <span v-if="!isCollapsed">Student</span>
         </RouterLink>
 
-        <router-link to="/examination" class="menu-item" active-class="active">
+        <RouterLink to="/examination" class="menu-item" active-class="active">
           <font-awesome-icon :icon="fas.examination" class="menu-icon"/>
           <span v-if="!isCollapsed">Examination</span>
-        </router-link>
+        </RouterLink>
 
-        <router-link to="/attendance" class="menu-item" active-class="active">
+        <RouterLink to="/attendance" class="menu-item" active-class="active">
           <font-awesome-icon :icon="fas.attendance" class="menu-icon"/>
           <span v-if="!isCollapsed">Attendance</span>
-        </router-link>
+        </RouterLink>
 
-        <router-link to="/transcript" class="menu-item" active-class="active">
+        <RouterLink to="/transcript" class="menu-item" active-class="active">
           <font-awesome-icon :icon="fas.transcript" class="menu-icon"/>
           <span v-if="!isCollapsed">Transcript</span>
-        </router-link>
+        </RouterLink>
 
-        <router-link to="/registration" class="menu-item" active-class="active">
+        <RouterLink to="/registration" class="menu-item" active-class="active">
           <font-awesome-icon :icon="fas.registration" class="menu-icon"/>
           <span v-if="!isCollapsed">Registration</span>
-        </router-link>
+        </RouterLink>
 
-        <router-link to="/report" class="menu-item" active-class="active">
+        <RouterLink to="/report" class="menu-item" active-class="active">
           <font-awesome-icon :icon="fas.report" class="menu-icon"/>
           <span v-if="!isCollapsed">Report</span>
-        </router-link>
+        </RouterLink>
 
-        <router-link to="/account" class="menu-item" active-class="active">
+        <RouterLink to="/account" class="menu-item" active-class="active">
           <font-awesome-icon :icon="fas.account" class="menu-icon"/>
           <span v-if="!isCollapsed">Account</span>
-        </router-link>
+        </RouterLink>
       </nav>
 
       <button class="logout-btn">
@@ -126,22 +126,22 @@
 <style scoped>
 .app-layout {
   display: flex;
+  min-height: 100vh;  
   width: 100vw;
-  height: 150vh;
-  overflow: hidden;
+  overflow: visible;  
   background-color: #fcfaf6;
   font-family: 'Inter', sans-serif;
 }
 
 .sidebar {
   width: 280px;
+  min-height: 100vh; 
   background-color: #5ba4d5;
-  height: 100%;
   color: white;
   display: flex;
   flex-direction: column;
   padding: 25px;
-  border-radius: 20px 20px 20px 20px;
+  border-radius: 20px;
   transition: width 0.3s ease;
   flex-shrink: 0;
 }
@@ -223,7 +223,7 @@
   align-items: center;
 }
 
-.main-container {
+.main-content {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
@@ -276,7 +276,7 @@
 
 .page-content {
   flex-grow: 1;
-  overflow-y: auto;
+  overflow-y: visible; /* allow scrolling if content is bigger */
   padding: 30px;
   background-color: #fcfaf6;
 }
@@ -306,9 +306,13 @@ a {
 
 /* Ensure the layout takes the full screen */
 body, html {
-  width: 100%;
+  /* width: 100%;
+  height: 100%; */
+  /* background-color: #fcfaf6; Match your beige background */
+
   height: 100%;
-  background-color: #fcfaf6; /* Match your beige background */
+  width: 100%;
+  overflow-y: auto; /* allow page scrolling */
 }
 
 </style>
