@@ -24,7 +24,7 @@
     <div class="filter-container">
       <div class="filter-grid">
         <div class="form-group">
-          <label>Search by Student id</label>
+          <label>Search by Student ID</label>
           <input
             v-model="filters.studentId"
             @input="debouncedFetch"
