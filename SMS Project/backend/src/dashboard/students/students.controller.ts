@@ -13,7 +13,7 @@ export class StudentsController {
 
   @Get('count')
   count() {
-    return this.studentsService.count().then(count => ({ count }));
+    return this.studentsService.count().then((count) => ({ count }));
   }
 
   @Get(':id')

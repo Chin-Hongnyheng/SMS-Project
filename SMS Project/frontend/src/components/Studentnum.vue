@@ -1,121 +1,87 @@
 <template>
-  <div class="student-num">
-    <div class="left-text">Students</div>
-    <div class="circle-container">
-      <div class="big-circle">
-        <div class="small-circle">
-          <img src="@/assets/boygirl.png" class="boygirl-img" />
-        </div>
+  <div class="chart-container">
+    <h3>Students</h3>
+    <div id="chart">
+      <apexchart class="chartposition"
+        type="donut" 
+        width="350" 
+        :options="chartOptions" 
+        :series="series"
+      ></apexchart>
+    </div>
+    
+    <div class="chart-legend">
+      <div class="legend-item">
+        <span class="dot boys"></span>
+        <p>Boys ({{ malePercent }}%)</p>
       </div>
-
-      <div class="legend-circles">
-        <!-- Boys -->
-        <div class="legend-item">
-          <div class="legend-circle left"></div>
-          <div class="legend-label">Boys: 120</div>
-        </div>
-
-        <!-- Girls -->
-        <div class="legend-item">
-          <div class="legend-circle right"></div>
-          <div class="legend-label">Girls: 123</div>
-        </div>
+      <div class="legend-item">
+        <span class="dot female"></span>
+        <p>female ({{ femalePercent }}%)</p>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-// No special JS needed unless you want to make boys/girls dynamic
+import { computed } from 'vue';
+
+const props = defineProps<{
+  male: number;
+  female: number;
+}>();
+
+const total = computed(() => props.male + props.female);
+const malePercent = computed(() => total.value ? Math.round((props.male / total.value) * 100) : 0);
+const femalePercent = computed(() => total.value ? Math.round((props.female / total.value) * 100) : 0);
+
+const series = computed(() => {
+  if (props.male === 0 && props.female === 0) {
+    return [1, 1];
+  }
+  return [props.male, props.female];
+});
+
+const chartOptions = {
+  labels: ['male', 'female'],
+  colors: ['#A5A6F6', '#FFD66B'], // Colors matching your prototype
+  legend: { show: false },
+  plotOptions: {
+    pie: {
+      donut: {
+        labels: {
+          show: true,
+          total: {
+            show: true,
+            label: 'Total Students',
+            formatter: () => total.value
+          }
+        }
+      }
+    }
+  }
+};
 </script>
 
 <style scoped>
-/* Use the same style as .right-square for the wrapper */
-.student-num {
-  background: #fff;
-  border-radius: 15px;
-  flex: 1;
-  display: flex;
-  align-items: center;
+.chart-container {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  width: 100%;
+  margin-top: 30px;
   justify-content: center;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-  flex-direction: column;
-  position: relative;
-  padding: 15px; /* optional padding */
 }
-
-.left-text { 
-  font-size: 18px; 
-  font-weight: 600; 
-  margin-bottom: 20px; 
+.chartposition {
+  justify-self: center
 }
-
-/* Circles */
-.circle-container { 
-  display: flex; 
-  flex-direction: column; 
-  align-items: center; 
-}
-
-.big-circle { 
-  width: 270px; 
-  height: 270px; 
-  border-radius: 50%; 
-  border: 27px solid #CFCEFF; 
-  display: flex; 
-  align-items: center;
-  justify-content: center; 
-  margin-bottom: 20px; 
-}
-
-.small-circle { 
-  width: 190px; 
-  height: 190px; 
-  border-radius: 50%; 
-  border: 27px solid #FFED9F; 
-  display: flex; 
-  align-items: center; 
-  justify-content: center; 
-}
-
-.boygirl-img {
-  width: 80px;   
-  height: 60px;
-  object-fit: contain;
-  position: absolute;
-}
-
-.legend-circles { 
-  width: 100%; 
-  display: flex; 
-  justify-content: space-around; 
-  margin-top: 10px; 
-}
-
-.legend-circle { 
-  width: 25px; 
-  height: 25px; 
-  border-radius: 50%; 
-}
-
-.legend-circle.left { 
-  background-color: #CFCEFF; 
-}
-
-.legend-circle.right { 
-  background-color: #FFED9F; 
-}
-
-.legend-item {
+.chart-legend {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
+  justify-content: space-around;
+  margin-top: 20px;
 }
-
-.legend-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-}
+.dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+.male { background-color: #A5A6F6; }
+.female { background-color: #FFD66B; }
+.legend-item p { font-size: 14px; color: #666; }
 </style>

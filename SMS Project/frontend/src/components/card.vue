@@ -10,13 +10,13 @@
 </template>
 
 <script setup lang="ts">
-defineProps<{
-  number: string
-  label: string
-  percent: string
-  arrow: string
-  color: 'green' | 'red'
-}>()
+  const props = defineProps<{
+    number: string | number;
+    label: string;
+    percent: string | number;
+    arrow?: string;
+    color: 'green' | 'red';
+  }>()
 </script>
 
 <style scoped>

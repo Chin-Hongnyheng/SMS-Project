@@ -39,7 +39,7 @@
       </div>
 
       <nav class="menu">
-        <RouterLink to="/admin" class="menu-item" active-class="active">
+        <RouterLink to="/dashboard" class="menu-item" active-class="active">
           <font-awesome-icon :icon="fas.house" class="menu-icon"/>
           <span v-if="!isCollapsed">Dashboard</span>
         </RouterLink>
@@ -127,7 +127,7 @@
 .app-layout {
   display: flex;
   min-height: 100vh;  
-  width: 100vw;
+  width: 100%;
   overflow: visible;  
   background-color: #fcfaf6;
   font-family: 'Inter', sans-serif;
