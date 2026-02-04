@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Delete, Param, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Param,
+  Body,
+  Query,
+} from '@nestjs/common';
 import { StudentsService } from './students.service';
 import { CreateStudentDto } from './dto/create-student.dto';
 
@@ -7,8 +15,12 @@ export class StudentsController {
   constructor(private readonly studentsService: StudentsService) {}
 
   @Get()
-  findAll() {
-    return this.studentsService.findAll();
+  findAll(
+    @Query('search') search?: string,
+    @Query('gender') gender?: string,
+    @Query('class') className?: string,
+  ) {
+    return this.studentsService.findAll(search, gender, className);
   }
 
   @Get('count')

@@ -54,7 +54,7 @@
           <span v-if="!isCollapsed">Admission</span>
         </RouterLink>
 
-        <RouterLink to="/student" class="menu-item" active-class="active">
+        <RouterLink to="/students" class="menu-item" active-class="active">
           <font-awesome-icon :icon="fas.student" class="menu-icon"/>
           <span v-if="!isCollapsed">Student</span>
         </RouterLink>

@@ -1,8 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Like, FindOptionsWhere } from 'typeorm';
 import { Student } from './entities/student.entity';
-import { CreateStudentDto } from './dto/create-student.dto';
+// import { CreateStudentDto } from './dto/create-student.dto';
 
 @Injectable()
 export class StudentsService {
@@ -11,23 +11,43 @@ export class StudentsService {
     private readonly studentRepository: Repository<Student>,
   ) {}
 
-  findAll() {
-    return this.studentRepository.find();
+  //create
+  create(data: Partial<Student>) {
+    const student = this.studentRepository.create(data);
+    return this.studentRepository.save(student);
+  }
+
+  async findAll(search?: string, gender?: string, className?: string) {
+    const baseFilters: FindOptionsWhere<Student> = {};
+
+    if (gender && gender.trim() !== '') {
+      baseFilters.gender = gender;
+    }
+    if (className && className.trim() !== '') {
+      baseFilters.class = className;
+    }
+
+    if (search && search.trim() !== '') {
+      const searchPattern = Like(`%${search}`);
+      return await this.studentRepository.find({
+        where: [
+          { ...baseFilters, name: searchPattern },
+          { ...baseFilters, studentId: searchPattern },
+        ],
+        order: { createdAt: 'DESC' },
+      });
+    }
+    return await this.studentRepository.find({
+      where: baseFilters,
+      order: { createdAt: 'DESC' },
+    });
+  }
+  async remove(id: number) {
+    return await this.studentRepository.delete(id);
   }
 
   findOne(id: number) {
     return this.studentRepository.findOneBy({ id });
-  }
-
-  create(dto: CreateStudentDto) {
-    const student = this.studentRepository.create(dto);
-    return this.studentRepository.save(student);
-  }
-
-  async remove(id: number) {
-    const student = await this.studentRepository.findOneBy({ id });
-    if (!student) throw new NotFoundException(`Student #${id} not found`);
-    return this.studentRepository.remove(student);
   }
 
   count() {

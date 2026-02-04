@@ -4,6 +4,9 @@
       <span class="arrow">{{ arrow }}</span>
       <span class="percent">{{ percent }}</span>
     </div>
+    <router-link v-if="label === 'Students'" to="/students" class="manage-link">
+      Manage →
+    </router-link>
     <div class="card-number">{{ number }}</div>
     <div class="card-label">{{ label }}</div>
   </div>
@@ -28,4 +31,19 @@
 .percent { font-size: 14px; }
 .card-number { position: absolute; top: 55px; left: 15px; font-size: 28px; font-weight: bold; color: #333; }
 .card-label { position: absolute; top: 95px; left: 15px; font-size: 18px; font-weight: 500; color: #555; }
+.manage-link {
+  position: absolute;
+  top: 11px;
+  right: 15px;
+  display: block;
+  margin-top: 10px;
+  font-size: 15px;
+  color: #666;
+  padding: 4px 8px;
+  text-decoration: none;
+  font-weight: 600;
+
+}
+.manage-link:hover { color: #000; }
+
 </style>

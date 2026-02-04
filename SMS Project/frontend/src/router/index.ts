@@ -23,7 +23,12 @@ const routes = [
   //   name: 'TeacherDashboard',
   //   component: TeacherDashboard
   // },
-    {
+  {
+    path: '/students',
+    name: 'Students',
+    component: StudentView
+  },
+  {
     path: '/curriculum',
     name: 'curriculum',
     component: CurriculumView

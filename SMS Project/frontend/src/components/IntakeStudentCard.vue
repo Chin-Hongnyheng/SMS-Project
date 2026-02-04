@@ -1,30 +1,8 @@
 <template>
   <div class="student-frame">
-    <!-- Top-left Title -->
     <span class="frame-title">Intake Students</span>
 
-    <!-- Search Row -->
-    <div class="search-row">
-      <div class="search-square">
-        <span class="square-text">Search</span>
-        <span class="search-icon">🔍</span>
-      </div>
-    </div>
-
-    <!-- 4 Small Squares Row -->
-    <div class="small-squares-row">
-      <div
-        class="info-square"
-        v-for="(item, index) in infoSquares"
-        :key="index"
-        @click="toggleCaret(index)"
-      >
-        <span class="square-text">{{ item.text }}</span>
-        <span class="caret">{{ item.open ? 'v' : '^' }}</span>
-      </div>
-    </div>
-
-    <!-- Blue Big Square with Headers -->
+    <!-- Big Square with Headers -->
     <div class="big-square blue-square headers-row">
       <span class="header-item">No</span>
       <span class="header-item">Student</span>
@@ -36,173 +14,29 @@
       <span class="header-item">Action</span>
     </div>
 
-    <!-- White Squares with Student Data -->
-    <div
-      class="big-square white-square data-row"
-      v-for="(student, index) in students"
-      :key="index"
-    >
-      <span class="data-item">{{ index + 1 }}</span>
-      <span class="data-item">{{ student.name }}</span>
-      <span class="data-item">{{ student.id }}</span>
-      <span class="data-item">{{ student.class }}</span>
-      <span class="data-item">{{ student.generation }}</span>
-      <span class="data-item">{{ student.location }}</span>
-      <span class="data-item">{{ student.contact }}</span>
-      <span class="data-item">
-        <button class="action-btn">Edit</button>
-        <button class="action-btn">Delete</button>
-      </span>
+    <!-- List of Students -->
+    <div v-if="students.length > 0">
+      <div class="big-square white-square data-row" v-for="(student, index) in students" :key="student.id">
+        <span class="data-item">{{ index + 1 }}</span>
+        <span class="data-item font-bold">{{ student.name }}</span>
+        <span class="data-item">{{ student.studentId }}</span>
+        <span class="data-item">{{ student.class }}</span>
+        <span class="data-item">{{ student.generation }}</span>
+        <span class="data-item">{{ student.location }}</span>
+        <span class="data-item">{{ student.contact }}</span>
+        <span class="data-item">
+          <button class="action-btn edit">Edit</button>
+          <button class="action-btn delete" @click="$emit('delete', student.id)">Delete</button>
+        </span>
+      </div>
     </div>
+    <div v-else class="empty-state">No students found.</div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { reactive } from 'vue';
-
-// Small squares
-const infoSquares = reactive([
-  { text: 'Class', open: false },
-  { text: 'Intake', open: false },
-  { text: 'Generation', open: false },
-  { text: 'Year', open: false },
-]);
-
-function toggleCaret(index: number) {
-  infoSquares[index].open = !infoSquares[index].open;
-}
-
-// Sample student data
-const students = reactive([
-  {
-    name: 'John Doe',
-    id: 'S1234',
-    class: '10A',
-    generation: '2023',
-    location: 'Phnom Penh',
-    contact: '012345678',
-  },
-  {
-    name: 'Jane Smith',
-    id: 'S1235',
-    class: '10B',
-    generation: '2023',
-    location: 'Battambang',
-    contact: '098765432',
-  },
-  {
-    name: 'Bob Tan',
-    id: 'S1236',
-    class: '10C',
-    generation: '2022',
-    location: 'Siem Reap',
-    contact: '011223344',
-  },
-    {
-    name: 'Bob Tan',
-    id: 'S1236',
-    class: '10C',
-    generation: '2022',
-    location: 'Siem Reap',
-    contact: '011223344',
-  },
-    {
-    name: 'Bob Tan',
-    id: 'S1236',
-    class: '10C',
-    generation: '2022',
-    location: 'Siem Reap',
-    contact: '011223344',
-  },
-    {
-    name: 'Bob Tan',
-    id: 'S1236',
-    class: '10C',
-    generation: '2022',
-    location: 'Siem Reap',
-    contact: '011223344',
-  },
-    {
-    name: 'Bob Tan',
-    id: 'S1236',
-    class: '10C',
-    generation: '2022',
-    location: 'Siem Reap',
-    contact: '011223344',
-  },
-    {
-    name: 'Bob Tan',
-    id: 'S1236',
-    class: '10C',
-    generation: '2022',
-    location: 'Siem Reap',
-    contact: '011223344',
-  },
-    {
-    name: 'Bob Tan',
-    id: 'S1236',
-    class: '10C',
-    generation: '2022',
-    location: 'Siem Reap',
-    contact: '011223344',
-  },
-    {
-    name: 'Bob Tan',
-    id: 'S1236',
-    class: '10C',
-    generation: '2022',
-    location: 'Siem Reap',
-    contact: '011223344',
-  },
-    {
-    name: 'Bob Tan',
-    id: 'S1236',
-    class: '10C',
-    generation: '2022',
-    location: 'Siem Reap',
-    contact: '011223344',
-  },
-    {
-    name: 'Bob Tan',
-    id: 'S1236',
-    class: '10C',
-    generation: '2022',
-    location: 'Siem Reap',
-    contact: '011223344',
-  },
-    {
-    name: 'Bob Tan',
-    id: 'S1236',
-    class: '10C',
-    generation: '2022',
-    location: 'Siem Reap',
-    contact: '011223344',
-  },
-    {
-    name: 'Bob Tan',
-    id: 'S1236',
-    class: '10C',
-    generation: '2022',
-    location: 'Siem Reap',
-    contact: '011223344',
-  },
-    {
-    name: 'Bob Tan',
-    id: 'S1236',
-    class: '10C',
-    generation: '2022',
-    location: 'Siem Reap',
-    contact: '011223344',
-  },
-    {
-    name: 'Bob Tan',
-    id: 'S1236',
-    class: '10C',
-    generation: '2022',
-    location: 'Siem Reap',
-    contact: '011223344',
-  },
-]);
+defineProps<{ students: any[] }>();
+defineEmits(['delete']);
 </script>
 
 <style scoped>
@@ -342,5 +176,22 @@ const students = reactive([
   color: white;
   cursor: pointer;
 }
-
+.action-btn.delete { background-color: #FF3F33; }
+.action-btn.edit { background-color: #5ba4d5; margin-right: 5px; }
+.empty-state { text-align: center; padding: 40px; color: #999; border: 1px dashed #ccc; border-radius: 15px; margin-top: 10px; }
+.big-square {
+  display: flex;
+  align-items: center;
+  padding: 0 15px;
+  min-height: 50px;
+  border: 1px solid #e0e0e0;
+  margin-top: -1px; /* Overlap borders for clean look */
+}
+.blue-square { background-color: #EDF9FD; border-radius: 12px 12px 0 0; }
+.white-square:last-child { border-radius: 0 0 12px 12px; }
+.header-item, .data-item { flex: 1; text-align: center; font-size: 13px; }
+.action-btn { border: none; padding: 4px 10px; border-radius: 4px; color: white; cursor: pointer; font-size: 11px; }
+.edit { background: #5ba4d5; margin-right: 5px; }
+.delete { background: #ff7675; }
+.empty-state { padding: 40px; text-align: center; color: #999; background: white; border-radius: 0 0 12px 12px; border: 1px solid #e0e0e0; }
 </style>
