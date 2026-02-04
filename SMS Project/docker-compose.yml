@@ -5,17 +5,13 @@ services:
     build: ./backend
     container_name: SMS-backend
     ports:
-      - "3000:3000"
+      - "51888:8000"
     depends_on:
       - postgres
     environment:
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_NAME: SMS
+      DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/attendance_db"
     volumes:
-      - ./backend/uploads:/app/uploads
+      - ./backend:/app
       - /app/node_modules
     command: npm run start:dev
   
@@ -26,20 +22,21 @@ services:
       - "5173:5173"
     depends_on:
       - backend
+    environment:
+      VITE_ATTENDANCE_API_URL: "http://localhost:51888"
+      VITE_SMS_API_URL: "http://localhost:51888"
     volumes:
       - ./frontend:/app       
       - /app/node_modules
-    command: npm run dev
+    command: npm run dev -- --host
   postgres:
     image: postgres:16
     container_name: sms-db
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: sms
-    ports:
-      - "5432:5432"
+      POSTGRES_DB: attendance_db
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata_sms:/var/lib/postgresql/data
 volumes:
-  pgdata:
+  pgdata_sms:
