@@ -1,38 +1,100 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 import AttendanceTable from '../components/AttendanceTable.vue'
+import AddStudentModal from '../components/AddStudentModal.vue'
 
 type StudentRow = { id: string; name: string; presentDays: number[] }
-type ClassOption = { id: number; name: string }
+type ClassOption = {
+  id: number
+  name: string
+  year: number
+  module: string
+  courseId: number | null
+  courseName: string
+}
+type CourseOption = { id: number; name: string }
 
 const days = ref<number[]>([])
 const students = ref<StudentRow[]>([])
 const classes = ref<ClassOption[]>([])
+const courses = ref<CourseOption[]>([])
 const selectedClassId = ref<number | null>(null)
 const currentMonth = ref('')
 const selectedMonth = ref('')
+const selectedCourseId = ref<number | null>(null)
+const selectedYear = ref<number | null>(null)
+const selectedModule = ref('Module 1')
 const apiBaseUrl = 'http://localhost:8000'
 const isModalOpen = ref(false)
 const searchQuery = ref('')
-const formName = ref('')
-const formCode = ref('')
-const formError = ref('')
-const isSubmitting = ref(false)
+const editingStudent = ref<StudentRow | null>(null)
+const modalMode = ref<'add' | 'edit'>('add')
 const isClassModalOpen = ref(false)
-const className = ref('')
+const classCourseId = ref<number | null>(null)
+const classYear = ref<number | null>(null)
+const classModule = ref('')
 const classError = ref('')
 const isClassSubmitting = ref(false)
-const studentClassId = ref<number | null>(null)
 
-const canSubmit = computed(() => formName.value.trim() !== '' && formCode.value.trim() !== '')
-const canCreateClass = computed(() => className.value.trim() !== '')
+const canCreateClass = computed(
+  () => Boolean(classCourseId.value) && Boolean(classYear.value) && classModule.value.trim() !== '',
+)
+const formatModuleLabel = (value: string) => value.replace(/^module\s*/i, 'Class ')
+const courseList = computed(() => courses.value.slice(0, 5))
+const courseIdSet = computed(() => new Set(courseList.value.map((course) => course.id)))
+const selectedCourseName = computed(() => {
+  const match = courseList.value.find((course) => course.id === selectedCourseId.value)
+  return match?.name ?? 'Course'
+})
+const selectedClassLabel = computed(
+  () => `${selectedCourseName.value} - Year ${selectedYear.value ?? ''} - ${formatModuleLabel(selectedModule.value)}`,
+)
+const displayClasses = computed(() => {
+  if (courseIdSet.value.size === 0) return classes.value
+  return classes.value.filter((item) => !item.courseId || courseIdSet.value.has(item.courseId))
+})
+const classOptions = computed(() => {
+  const filtered = displayClasses.value.filter((klass) => {
+    if (selectedCourseId.value && klass.courseId !== selectedCourseId.value) return false
+    if (selectedYear.value && klass.year !== selectedYear.value) return false
+    if (selectedModule.value && klass.module !== selectedModule.value) return false
+    return true
+  })
+  return filtered.map((klass) => ({
+    id: klass.id,
+    label: `${klass.courseName} - Year ${klass.year} - ${formatModuleLabel(klass.module)}`,
+  }))
+})
 const filteredStudents = computed(() => {
   const query = searchQuery.value.trim().toLowerCase()
   if (!query) return students.value
   return students.value.filter((student) => student.name.toLowerCase().includes(query))
 })
+const availableYears = [1, 2, 3, 4, 5]
+const availableModules = computed(() => {
+  const modules = new Set<string>()
+  const filtered = displayClasses.value.filter((item) => {
+    if (selectedCourseId.value && item.courseId !== selectedCourseId.value) return false
+    if (selectedYear.value && item.year !== selectedYear.value) return false
+    return true
+  })
+  for (const item of filtered) {
+    if (item.module) {
+      modules.add(item.module)
+    }
+  }
+  const list = Array.from(modules)
+  return list.length > 0 ? list : ['Module 1', 'Module 2', 'Module 3', 'Module 4', 'Module 5']
+})
 
 const fetchAttendance = async () => {
+  if (!selectedClassId.value) {
+    days.value = []
+    students.value = []
+    return
+  }
   const now = new Date()
   const monthValue =
     selectedMonth.value || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
@@ -49,20 +111,92 @@ const fetchAttendance = async () => {
 }
 
 const openModal = () => {
-  formName.value = ''
-  formCode.value = ''
-  formError.value = ''
-  studentClassId.value = selectedClassId.value
+  modalMode.value = 'add'
+  editingStudent.value = null
   isModalOpen.value = true
 }
 
-const closeModal = () => {
-  if (isSubmitting.value) return
-  isModalOpen.value = false
+const openEditModal = (student: StudentRow) => {
+  modalMode.value = 'edit'
+  editingStudent.value = student
+  isModalOpen.value = true
+}
+
+const handleStudentSaved = async (payload?: { classId?: number }) => {
+  if (payload?.classId && selectedClassId.value !== payload.classId) {
+    selectedClassId.value = payload.classId
+  }
+  await fetchClasses()
+  syncSelectionFromClasses()
+  fetchAttendance().catch(() => {
+    students.value = []
+  })
+}
+
+const exportPdf = () => {
+  const monthLabel = selectedMonth.value || currentMonth.value || 'current'
+  const exportTimestamp = new Date().toLocaleString()
+  const title = 'Attendance Report'
+
+  const doc = new jsPDF({
+    orientation: 'landscape',
+    unit: 'pt',
+    format: 'a4',
+  })
+
+  doc.setFontSize(14)
+  doc.text(title, 40, 34)
+  doc.setFontSize(10)
+  doc.text(`Course: ${selectedCourseName.value}`, 40, 52)
+  doc.text(`Year: ${selectedYear.value ?? '-'}`, 40, 66)
+  doc.text(`Class: ${formatModuleLabel(selectedModule.value)}`, 40, 80)
+  doc.text(`Month: ${monthLabel}`, 320, 52)
+  doc.text(`Exported: ${exportTimestamp}`, 320, 66)
+
+  const header = ['Student Name', 'ID', ...days.value.map((day) => String(day))]
+  const rows = filteredStudents.value.map((student) => {
+    const presentSet = new Set(student.presentDays)
+    return [
+      student.name,
+      student.id,
+      ...days.value.map((day) => (presentSet.has(day) ? 'P' : '')),
+    ]
+  })
+
+  autoTable(doc, {
+    startY: 98,
+    head: [header],
+    body: rows,
+    styles: {
+      fontSize: 8,
+      cellPadding: 3,
+      valign: 'middle',
+      halign: 'center',
+    },
+    headStyles: {
+      fillColor: [91, 164, 213],
+      textColor: [255, 255, 255],
+      halign: 'center',
+    },
+    columnStyles: {
+      0: { halign: 'left', cellWidth: 160 },
+      1: { halign: 'left', cellWidth: 70 },
+    },
+    margin: { left: 40, right: 40 },
+  })
+
+  const finalY = (doc as unknown as { lastAutoTable?: { finalY?: number } }).lastAutoTable?.finalY
+  doc.setFontSize(9)
+  doc.text('P = Present, blank = unmarked', 40, finalY ? finalY + 18 : 110)
+
+  const safeMonth = monthLabel.replace(/[^\w-]+/g, '_')
+  doc.save(`attendance_${safeMonth}.pdf`)
 }
 
 const openClassModal = () => {
-  className.value = ''
+  classCourseId.value = selectedCourseId.value ?? courseList.value[0]?.id ?? null
+  classYear.value = selectedYear.value ?? 1
+  classModule.value = selectedModule.value || 'Module 1'
   classError.value = ''
   isClassModalOpen.value = true
 }
@@ -70,36 +204,6 @@ const openClassModal = () => {
 const closeClassModal = () => {
   if (isClassSubmitting.value) return
   isClassModalOpen.value = false
-}
-
-const submitStudent = async () => {
-  if (!canSubmit.value || isSubmitting.value) return
-  isSubmitting.value = true
-  formError.value = ''
-
-  try {
-    const response = await fetch(`${apiBaseUrl}/students`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        fullName: formName.value.trim(),
-        studentCode: formCode.value.trim(),
-        classId: studentClassId.value ?? undefined,
-      }),
-    })
-
-    if (!response.ok) {
-      formError.value = 'Failed to add student'
-      return
-    }
-
-    await fetchAttendance()
-    isModalOpen.value = false
-  } catch (error) {
-    formError.value = 'Failed to add student'
-  } finally {
-    isSubmitting.value = false
-  }
 }
 
 const submitClass = async () => {
@@ -111,7 +215,11 @@ const submitClass = async () => {
     const response = await fetch(`${apiBaseUrl}/classes`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: className.value.trim() }),
+      body: JSON.stringify({
+        courseId: classCourseId.value,
+        year: classYear.value,
+        module: classModule.value.trim(),
+      }),
     })
 
     if (!response.ok) {
@@ -120,6 +228,10 @@ const submitClass = async () => {
     }
 
     await fetchClasses()
+    selectedCourseId.value = classCourseId.value
+    selectedYear.value = classYear.value
+    selectedModule.value = classModule.value.trim()
+    await applySelection()
     isClassModalOpen.value = false
   } catch (error) {
     classError.value = 'Failed to add class'
@@ -129,8 +241,11 @@ const submitClass = async () => {
 }
 
 onMounted(() => {
-  fetchClasses()
-    .then(fetchAttendance)
+  Promise.all([fetchCourses(), fetchClasses()])
+    .then(() => {
+      syncSelectionFromClasses()
+      return fetchAttendance()
+    })
     .catch(() => {
       days.value = Array.from({ length: 31 }, (_, index) => index + 1)
       students.value = []
@@ -144,18 +259,91 @@ const fetchClasses = async () => {
   }
   const data = await response.json()
   classes.value = Array.isArray(data) ? data : []
-  if (!selectedClassId.value && classes.value.length > 0) {
-    selectedClassId.value = classes.value[0].id
+}
+
+const fetchCourses = async () => {
+  const response = await fetch(`${apiBaseUrl}/courses`)
+  if (!response.ok) {
+    throw new Error('Failed to load courses')
   }
-  if (!studentClassId.value && selectedClassId.value) {
-    studentClassId.value = selectedClassId.value
+  const data = await response.json()
+  courses.value = Array.isArray(data) ? data : []
+  const list = courseList.value
+  if (!selectedCourseId.value || !list.some((course) => course.id === selectedCourseId.value)) {
+    selectedCourseId.value = list[0]?.id ?? null
+  }
+  if (!selectedYear.value) {
+    selectedYear.value = availableYears[0]
+  }
+  if (!selectedModule.value) {
+    selectedModule.value = 'Module 1'
   }
 }
 
-const handleClassSelect = (id: number) => {
-  if (selectedClassId.value === id) return
-  selectedClassId.value = id
-  fetchAttendance().catch(() => {
+const syncSelectionFromClasses = () => {
+  if (displayClasses.value.length === 0) {
+    selectedClassId.value = null
+    return
+  }
+  let target = displayClasses.value.find((item) => item.id === selectedClassId.value)
+  if (!target && selectedCourseId.value && selectedYear.value && selectedModule.value) {
+    target = displayClasses.value.find(
+      (item) =>
+        item.courseId === selectedCourseId.value &&
+        item.year === selectedYear.value &&
+        item.module === selectedModule.value,
+    )
+  }
+  if (!target) {
+    target = displayClasses.value[0]
+  }
+  selectedClassId.value = target.id
+  selectedCourseId.value = target.courseId ?? selectedCourseId.value
+  selectedYear.value = target.year ?? selectedYear.value
+  selectedModule.value = target.module ?? selectedModule.value
+}
+
+const applySelection = async () => {
+  const moduleOptions = availableModules.value
+  if (!moduleOptions.includes(selectedModule.value)) {
+    selectedModule.value = moduleOptions[0] ?? 'Module 1'
+  }
+  const match = displayClasses.value.find(
+    (item) =>
+      item.courseId === selectedCourseId.value &&
+      item.year === selectedYear.value &&
+      item.module === selectedModule.value,
+  )
+  if (!match) {
+    selectedClassId.value = null
+    days.value = []
+    students.value = []
+    return
+  }
+  selectedClassId.value = match.id
+  await fetchAttendance()
+}
+
+const handleCourseSelect = (id: number) => {
+  if (selectedCourseId.value === id) return
+  selectedCourseId.value = id
+  applySelection().catch(() => {
+    students.value = []
+  })
+}
+
+const handleYearSelect = (value: number) => {
+  if (selectedYear.value === value) return
+  selectedYear.value = value
+  applySelection().catch(() => {
+    students.value = []
+  })
+}
+
+const handleModuleSelect = (value: string) => {
+  if (selectedModule.value === value) return
+  selectedModule.value = value
+  applySelection().catch(() => {
     students.value = []
   })
 }
@@ -203,9 +391,7 @@ const handleDeleteClass = async () => {
   }
 
   await fetchClasses()
-  if (!classes.value.find((item) => item.id === selectedClassId.value)) {
-    selectedClassId.value = classes.value[0]?.id ?? null
-  }
+  syncSelectionFromClasses()
   await fetchAttendance()
 }
 
@@ -241,6 +427,7 @@ const handleToggleAttendance = async (payload: { studentId: string; day: number;
     target.presentDays = target.presentDays.filter((day) => day !== payload.day)
   }
 }
+
 </script>
 
 <template>
@@ -258,51 +445,40 @@ const handleToggleAttendance = async (payload: { studentId: string; day: number;
     <AttendanceTable
       :days="days"
       :students="filteredStudents"
-      :classes="classes"
-      :selected-class-id="selectedClassId"
+      :courses="courseList"
+      :years="availableYears"
+      :modules="availableModules"
+      :selected-course-id="selectedCourseId"
+      :selected-year="selectedYear"
+      :selected-module="selectedModule"
       :selected-month="selectedMonth"
       @add-student="openModal"
       @add-class="openClassModal"
       @delete-class="handleDeleteClass"
-      @select-class="handleClassSelect"
+      @select-course="handleCourseSelect"
+      @select-year="handleYearSelect"
+      @select-module="handleModuleSelect"
       @select-month="handleMonthSelect"
       @delete-student="handleDeleteStudent"
+      @edit-student="openEditModal"
+      @export-pdf="exportPdf"
       @toggle-attendance="handleToggleAttendance"
     />
 
-    <div v-if="isModalOpen" class="modal-backdrop" @click="closeModal">
-      <div class="modal" @click.stop>
-        <div class="modal-header">
-          <h2>Add Student</h2>
-          <button class="modal-close" type="button" @click="closeModal">✕</button>
-        </div>
-        <div class="modal-body">
-          <label class="modal-field">
-            <span>Student Name</span>
-            <input v-model="formName" type="text" placeholder="Student name" />
-          </label>
-          <label class="modal-field">
-            <span>Student ID</span>
-            <input v-model="formCode" type="text" placeholder="ST-011" />
-          </label>
-          <label class="modal-field">
-            <span>Class</span>
-            <select v-model="studentClassId">
-              <option v-for="klass in classes" :key="klass.id" :value="klass.id">
-                {{ klass.name }}
-              </option>
-            </select>
-          </label>
-          <p v-if="formError" class="modal-error">{{ formError }}</p>
-        </div>
-        <div class="modal-actions">
-          <button class="ghost" type="button" @click="closeModal">Cancel</button>
-          <button class="primary" type="button" :disabled="!canSubmit || isSubmitting" @click="submitStudent">
-            {{ isSubmitting ? 'Saving...' : 'Save' }}
-          </button>
-        </div>
-      </div>
-    </div>
+    <AddStudentModal
+      :open="isModalOpen"
+      :mode="modalMode"
+      :student="editingStudent"
+      :class-options="classOptions"
+      :selected-class-id="selectedClassId"
+      :selected-class-label="selectedClassLabel"
+      :selected-course-id="selectedCourseId"
+      :selected-year="selectedYear"
+      :selected-module="selectedModule"
+      :api-base-url="apiBaseUrl"
+      @close="isModalOpen = false"
+      @saved="handleStudentSaved"
+    />
 
     <div v-if="isClassModalOpen" class="modal-backdrop" @click="closeClassModal">
       <div class="modal" @click.stop>
@@ -312,8 +488,22 @@ const handleToggleAttendance = async (payload: { studentId: string; day: number;
         </div>
         <div class="modal-body">
           <label class="modal-field">
-            <span>Class Name</span>
-            <input v-model="className" type="text" placeholder="Class C" />
+            <span>Course</span>
+            <select v-model.number="classCourseId">
+              <option v-for="course in courseList" :key="course.id" :value="course.id">
+                {{ course.name }}
+              </option>
+            </select>
+          </label>
+          <label class="modal-field">
+            <span>Year</span>
+            <select v-model.number="classYear">
+              <option v-for="year in availableYears" :key="year" :value="year">Year {{ year }}</option>
+            </select>
+          </label>
+          <label class="modal-field">
+            <span>Module</span>
+            <input v-model="classModule" type="text" placeholder="Module 1" />
           </label>
           <p v-if="classError" class="modal-error">{{ classError }}</p>
         </div>

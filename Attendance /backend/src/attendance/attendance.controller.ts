@@ -10,13 +10,26 @@ export class AttendanceController {
     return this.attendanceService.getClasses()
   }
 
+  @Get('courses')
+  async getCourses() {
+    return this.attendanceService.getCourses()
+  }
+
   @Post('classes')
-  async addClass(@Body() body: { name?: string }) {
-    if (!body?.name) {
-      return { error: 'name is required' }
+  async addClass(
+    @Body()
+    body: { name?: string; courseId?: number; year?: number; module?: string },
+  ) {
+    if (!body?.name && !body?.courseId) {
+      return { error: 'courseId or name is required' }
     }
 
-    return this.attendanceService.addClass({ name: body.name })
+    return this.attendanceService.addClass({
+      name: body.name,
+      courseId: body.courseId,
+      year: body.year,
+      module: body.module,
+    })
   }
 
   @Delete('classes/:classId')
@@ -47,6 +60,23 @@ export class AttendanceController {
 
     return this.attendanceService.addStudent({
       studentCode: body.studentCode,
+      fullName: body.fullName,
+      classId: body.classId,
+    })
+  }
+
+  @Put('students/:studentCode')
+  async updateStudent(
+    @Param('studentCode') studentCode: string,
+    @Body() body: { studentCode?: string; fullName?: string; classId?: number },
+  ) {
+    if (!body?.studentCode && !body?.fullName && !body?.classId) {
+      return { error: 'studentCode, fullName, or classId is required' }
+    }
+
+    return this.attendanceService.updateStudent({
+      studentCode,
+      newStudentCode: body.studentCode,
       fullName: body.fullName,
       classId: body.classId,
     })

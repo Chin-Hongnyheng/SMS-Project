@@ -5,42 +5,74 @@ interface Student {
   presentDays: number[]
 }
 
-type ClassOption = { id: number; name: string }
+type CourseOption = { id: number; name: string }
 
 defineProps<{
   days: number[]
   students: Student[]
-  classes: ClassOption[]
-  selectedClassId: number | null
+  courses: CourseOption[]
+  years: number[]
+  modules: string[]
+  selectedCourseId: number | null
+  selectedYear: number | null
+  selectedModule: string
   selectedMonth: string
 }>()
 const emit = defineEmits<{
   (event: 'add-student'): void
   (event: 'add-class'): void
   (event: 'delete-class'): void
-  (event: 'select-class', id: number): void
+  (event: 'select-course', id: number): void
+  (event: 'select-year', value: number): void
+  (event: 'select-module', value: string): void
   (event: 'select-month', value: string): void
   (event: 'delete-student', id: string): void
+  (event: 'edit-student', student: Student): void
+  (event: 'export-pdf'): void
   (event: 'toggle-attendance', payload: { studentId: string; day: number; present: boolean }): void
 }>()
+
+const formatModuleLabel = (value: string) => value.replace(/^module\s*/i, 'Class ')
 </script>
 
 <template>
   <section class="panel">
     <div class="panel-title">
       <div class="title-group">
-        <span class="module-tag">Module 5 Student attendance</span>
+        <span class="module-tag">{{ formatModuleLabel(selectedModule) }} Student attendance</span>
         <h1>Student Attendance</h1>
       </div>
       <div class="panel-actions">
+        <label class="course-select">
+          <span>Course</span>
+          <select
+            :value="selectedCourseId ?? undefined"
+            @change="emit('select-course', Number(($event.target as HTMLSelectElement).value))"
+          >
+            <option v-for="course in courses" :key="course.id" :value="course.id">
+              {{ course.name }}
+            </option>
+          </select>
+        </label>
+        <label class="year-select">
+          <span>Year</span>
+          <select
+            :value="selectedYear ?? undefined"
+            @change="emit('select-year', Number(($event.target as HTMLSelectElement).value))"
+          >
+            <option v-for="year in years" :key="year" :value="year">
+              Year {{ year }}
+            </option>
+          </select>
+        </label>
         <label class="class-select">
           <span>Class</span>
           <select
-            :value="selectedClassId ?? undefined"
-            @change="emit('select-class', Number(($event.target as HTMLSelectElement).value))"
+            :value="selectedModule"
+            @change="emit('select-module', ($event.target as HTMLSelectElement).value)"
           >
-            <option v-for="klass in classes" :key="klass.id" :value="klass.id">
-              {{ klass.name }}
+            <option v-for="moduleValue in modules" :key="moduleValue" :value="moduleValue">
+              {{ formatModuleLabel(moduleValue) }}
             </option>
           </select>
         </label>
@@ -52,9 +84,10 @@ const emit = defineEmits<{
             @change="emit('select-month', ($event.target as HTMLInputElement).value)"
           />
         </label>
+        <button class="ghost export-pdf" type="button" @click="emit('export-pdf')">Export PDF</button>
         <button class="ghost add-class" type="button" @click="emit('add-class')">Add Class</button>
         <button class="ghost delete-class" type="button" @click="emit('delete-class')">Remove Class</button>
-        <button class="add-btn" type="button" @click="emit('add-student')">Add New</button>
+        <button class="add-btn" type="button" @click="emit('add-student')">Add Student</button>
       </div>
     </div>
 
@@ -76,7 +109,26 @@ const emit = defineEmits<{
           <div class="cell name">
             <span class="avatar-dot"></span>
             {{ student.name }}
-            <button class="delete-row" type="button" @click="emit('delete-student', student.id)">✕</button>
+            <div class="row-actions">
+              <button
+                class="edit-row"
+                type="button"
+                title="Edit student"
+                aria-label="Edit student"
+                @click="emit('edit-student', student)"
+              >
+                <span class="edit-icon">✎</span>
+              </button>
+              <button
+                class="delete-row"
+                type="button"
+                title="Remove student"
+                aria-label="Remove student"
+                @click="emit('delete-student', student.id)"
+              >
+                <span class="delete-icon">×</span>
+              </button>
+            </div>
           </div>
           <div class="cell id">{{ student.id }}</div>
           <div class="days" role="row">
@@ -129,6 +181,7 @@ const emit = defineEmits<{
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .class-select {
@@ -140,7 +193,10 @@ const emit = defineEmits<{
   font-weight: 600;
 }
 
-.class-select select {
+.class-select select,
+.course-select select,
+.year-select select,
+.module-select select {
   border: 1px solid #d9dfe7;
   background: #f7f9fc;
   border-radius: 10px;
@@ -148,6 +204,17 @@ const emit = defineEmits<{
   font-family: inherit;
   font-weight: 600;
   cursor: pointer;
+}
+
+.course-select,
+.year-select,
+.module-select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #5c6b78;
+  font-weight: 600;
 }
 
 .month-select {
@@ -177,6 +244,10 @@ const emit = defineEmits<{
   padding: 8px 14px;
   color: #b0403a;
   border-color: #f0c9c7;
+}
+
+.export-pdf {
+  padding: 8px 14px;
 }
 
 .title-group {
@@ -293,20 +364,61 @@ const emit = defineEmits<{
   color: #6c7784;
 }
 
-.delete-row {
-  border: none;
-  background: transparent;
-  padding: 0 2px;
-  font-size: 1rem;
-  line-height: 1;
-  cursor: pointer;
-  color: #b0403a;
+.row-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   margin-left: 8px;
-  opacity: 0.8;
+}
+
+.edit-row,
+.delete-row {
+  border: 1px solid #d9dfe7;
+  background: #f7f9fc;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.edit-row:hover {
+  background: #e8f3fb;
+  box-shadow: 0 4px 10px rgba(63, 133, 189, 0.18);
+  transform: translateY(-1px);
+}
+
+.delete-row {
+  border-color: #f2c1bf;
+  background: #fff5f5;
 }
 
 .delete-row:hover {
-  opacity: 1;
+  background: #ffe4e2;
+  box-shadow: 0 4px 10px rgba(176, 64, 58, 0.15);
+  transform: translateY(-1px);
+}
+
+.edit-row:focus-visible,
+.delete-row:focus-visible {
+  outline: 2px solid #b0403a;
+  outline-offset: 2px;
+}
+
+.edit-icon {
+  font-size: 0.95rem;
+  line-height: 1;
+  color: #3f85bd;
+  font-weight: 700;
+}
+
+.delete-icon {
+  font-size: 1.05rem;
+  line-height: 1;
+  color: #b0403a;
+  font-weight: 700;
 }
 
 .days {

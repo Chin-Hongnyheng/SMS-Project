@@ -1,5 +1,17 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, Unique } from 'typeorm'
 
+@Entity({ name: 'courses' })
+export class CourseEntity {
+  @PrimaryGeneratedColumn()
+  id: number
+
+  @Column({ type: 'text' })
+  name: string
+
+  @OneToMany(() => ClassEntity, (klass) => klass.course)
+  classes: ClassEntity[]
+}
+
 @Entity({ name: 'classes' })
 export class ClassEntity {
   @PrimaryGeneratedColumn()
@@ -7,6 +19,16 @@ export class ClassEntity {
 
   @Column({ type: 'text' })
   name: string
+
+  @Column({ type: 'int', default: 1 })
+  year: number
+
+  @Column({ type: 'text', name: 'module_name', default: 'Module 1' })
+  module: string
+
+  @ManyToOne(() => CourseEntity, (course) => course.classes, { onDelete: 'CASCADE', nullable: true })
+  @JoinColumn({ name: 'course_id' })
+  course: CourseEntity
 
   @OneToMany(() => Student, (student) => student.classEntity)
   students: Student[]
@@ -30,6 +52,7 @@ export class Student {
 
 @Entity({ name: 'attendance' })
 @Unique(['classEntity', 'student', 'attendanceDate'])
+
 export class AttendanceRecord {
   @PrimaryGeneratedColumn()
   id: number
@@ -47,4 +70,22 @@ export class AttendanceRecord {
 
   @Column({ type: 'boolean', default: true })
   present: boolean
+}
+
+@Entity({ name: 'users' })
+export class Users {
+  @PrimaryGeneratedColumn()
+  id: number
+
+  @Column({ type: 'text', name: 'user_name' })
+  userName: string
+
+  @Column({ type: 'text' })
+  email: string
+
+  @Column({ type: 'text' })
+  password: string
+
+  @Column({ type: 'text', default: 'user' })
+  role: string
 }
