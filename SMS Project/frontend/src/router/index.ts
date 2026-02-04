@@ -1,8 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import CurriculumView from '../views/CurriculumView.vue'
 
 const router = createRouter({
-
   history: createWebHistory('/'),
   routes: [
     {
@@ -12,14 +10,34 @@ const router = createRouter({
     {
       path: '/curriculum',
       name: 'curriculum',
-      component: CurriculumView
+      component: () => import('../views/CurriculumView.vue'),
     },
     {
       path: '/curriculum/:id',
       name: 'course-details',
-      component: () => import('../views/CourseDetailView.vue')
-    }
-  ]
+      component: () => import('../views/CourseDetailView.vue'),
+    },
+    {
+      path: '/examination',
+      name: 'examination',
+      component: () => import('../views/OverallExamView.vue'),
+    },
+    {
+      path: '/exam-types',
+      name: 'exam-types',
+      component: () => import('../views/ExamTypeView.vue'),
+    },
+    {
+      path: '/exam-schedules',
+      name: 'exam-schedules',
+      component: () => import('../views/ExamScheduleView.vue'),
+    },
+    {
+      path: '/exam-results',
+      name: 'exam-results',
+      component: () => import('../views/ExamResultView.vue'),
+    },
+  ],
 })
 
 export default router

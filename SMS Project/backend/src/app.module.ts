@@ -4,6 +4,9 @@ import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CurriculumModule } from './curriculum/curriculum.module';
+import { ExamTypesModule } from './exam-types/exam-types.module';
+import { ExamSchedulesModule } from './exam-schedules/exam-schedules.module';
+import { ExamResultsModule } from './exam-results/exam-results.module';
 
 @Module({
   imports: [
@@ -20,6 +23,9 @@ import { CurriculumModule } from './curriculum/curriculum.module';
     }),
     UsersModule,
     CurriculumModule,
+    ExamTypesModule,
+    ExamSchedulesModule,
+    ExamResultsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
