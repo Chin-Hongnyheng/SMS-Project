@@ -20,6 +20,7 @@ import boyGirl from '../assets/boygirl.png'
   background: white;
   border-radius: 18px;
   padding: 25px;
+  width: 150%;
 }
 
 .welcome {

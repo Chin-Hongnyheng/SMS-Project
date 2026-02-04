@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import DashboardHeader from '../components/DashboardHeader.vue'
 import WelcomeCard from '../components/WelcomeCard.vue'
-import ProgressCard from '../components/ProgressCard.vue'
+// import ProgressCard from '../components/ProgressCard.vue'
 import StatsCards from '../components/StatsCards.vue'
 import AssignmentTable from '../components/AssignmentTable.vue'
 import ScheduleCard from '../components/ScheduleCard.vue'
@@ -15,7 +15,7 @@ import Calendar from '../components/Calendar.vue'
 
     <div class="row two-col">
       <WelcomeCard />
-      <ProgressCard />
+      <!-- <ProgressCard /> -->
     </div>
 
     <StatsCards />

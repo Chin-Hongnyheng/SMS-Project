@@ -1,7 +1,7 @@
 <template>
   <div class="student-frame">
     <!-- Top-left Title -->
-    <span class="frame-title">Intake Students</span>
+    <span class="frame-title">Students List</span>
 
     <!-- Search Row -->
     <div class="search-row">
