@@ -21,7 +21,6 @@ import { extname } from 'path';
 @Controller('curriculum')
 export class CurriculumController {
   constructor(private readonly curriculumService: CurriculumService) {}
-
   @Post()
   create(@Body() createCurriculumDto: CreateCurriculumDto) {
     return this.curriculumService.create(createCurriculumDto);

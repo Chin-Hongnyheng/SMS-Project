@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { CurriculumService } from './curriculum.service';
 import { CurriculumController } from './curriculum.controller';
 import { Subject } from './entities/curriculum.entity';
-import { TypeOrmModule } from '@nestjs/typeorm/dist/typeorm.module';
 import { Lecture } from './entities/lecture.entity';
 import { Announcement } from './entities/announcement.entity';
 

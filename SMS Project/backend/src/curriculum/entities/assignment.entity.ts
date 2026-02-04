@@ -1,7 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
 import { Subject } from './curriculum.entity';
 
-@Entity()
+@Entity("assignment")
 export class Assignment {
   @PrimaryGeneratedColumn()
   id: number;
