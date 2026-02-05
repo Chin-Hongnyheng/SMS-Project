@@ -1,4 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import CurriculumView from '../views/CurriculumView.vue'
+import AttendanceView from '../views/AttendanceView.vue'
+import HomeView from '../views/HomeView.vue'
 
 const router = createRouter({
   history: createWebHistory('/'),

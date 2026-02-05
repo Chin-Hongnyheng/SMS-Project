@@ -28,6 +28,10 @@ services:
     #   - "sms_network"
     depends_on:
       - backend
+    environment:
+      VITE_ATTENDANCE_API_URL: "http://192.168.100.209:51888"
+      VITE_SMS_API_URL: "http://192.168.100.209:51888"
+      VITE_PUBLIC_APP_URL: "http://192.168.100.209:5173"
     volumes:
       - ./frontend:/app       
       - /app/node_modules
