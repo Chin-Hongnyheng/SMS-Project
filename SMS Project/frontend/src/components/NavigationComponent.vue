@@ -1,12 +1,10 @@
 <template>
-  <aside class="sidebar" :class="{ 'collapsed': isCollapsed }">
-    <!-- Logo Section -->
+  <aside class="sidebar" :class="{ collapsed: isCollapsed }">
     <div class="logo-section">
       <img src="@/assets/logortc.png" alt="RTC Logo" class="logo-img" />
       <span v-if="!isCollapsed">BATTAMBANG REGIONAL TRAINING CENTER</span>
     </div>
 
-    <!-- Navigation Menu -->
     <nav class="menu">
       <RouterLink
         v-for="item in filteredNavItems"
@@ -15,11 +13,7 @@
         custom
         v-slot="{ navigate }"
       >
-        <div
-          class="menu-item"
-          :class="{ active: isNavActive(item.path) }"
-          @click="navigate"
-        >
+        <div class="menu-item" :class="{ active: isNavActive(item.path) }" @click="navigate">
           <font-awesome-icon :icon="item.icon" class="menu-icon" />
           <span v-if="!isCollapsed" class="navigation-title">
             {{ item.title }}
@@ -28,7 +22,6 @@
       </RouterLink>
     </nav>
 
-    <!-- Logout Button -->
     <button class="logout-btn" @click="logout">
       <font-awesome-icon :icon="fas.logout" class="menu-icon" />
       <span v-if="!isCollapsed" class="navigation-title">Logout</span>
@@ -37,9 +30,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { RouterLink, useRouter, useRoute } from 'vue-router'
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 const router = useRouter()
 
@@ -61,18 +53,12 @@ const fas = {
 
 const route = useRoute()
 const isNavActive = (path: string) => {
-  // Academic should stay active for curriculum & subject pages
   if (path === '/academic') {
-    return (
-      route.path === '/academic' ||
-      route.path.startsWith('/curriculum')
-    )
+    return route.path === '/academic' || route.path.startsWith('/curriculum')
   }
 
-  // Normal behavior for other menu items
   return route.path.startsWith(path)
 }
-
 
 const navItems = [
   { path: '/dashboard', title: 'Dashboard', icon: fas.house, roles: ['admin', 'teacher', 'user'] },
@@ -87,15 +73,12 @@ const navItems = [
   { path: '/account', title: 'Account', icon: fas.account, roles: ['admin', 'teacher', 'user'] },
 ]
 
-// Get user roles from sessionStorage
 const userRoles: string[] = JSON.parse(sessionStorage.getItem('roles') || '[]')
 
-// Filter nav items based on role
 const filteredNavItems = computed(() =>
-  navItems.filter(item => item.roles.some(role => userRoles.includes(role)))
+  navItems.filter((item) => item.roles.some((role) => userRoles.includes(role))),
 )
 
-// Logout function
 const logout = () => {
   sessionStorage.removeItem('token')
   sessionStorage.removeItem('roles')

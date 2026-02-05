@@ -82,6 +82,11 @@ const router = createRouter({
       component: () => import('../views/AttendanceView.vue'),
     },
     {
+      path: '/attendance/check-in',
+      name: 'attendance-check-in',
+      component: () => import('../views/AttendanceCheckInView.vue'),
+    },
+    {
       path: '/transcript',
       name: 'transcript',
       meta: { requiresAuth: true, roles: ['user', 'teacher', 'admin'] },
@@ -107,15 +112,14 @@ const router = createRouter({
     },
   ],
 })
+
 router.beforeEach((to, from, next) => {
   const token = sessionStorage.getItem('token')
   const roles: string[] = JSON.parse(sessionStorage.getItem('roles') || '[]')
 
   if (to.meta.requiresAuth) {
-    // No token → force login
     if (!token) return next('/login')
 
-    // Check role access
     if (to.meta.roles) {
       const allowedRoles = (to.meta.roles as string[]).map((r) => r.toLowerCase())
       const hasAccess = roles.some((r) => allowedRoles.includes(r))
@@ -124,4 +128,5 @@ router.beforeEach((to, from, next) => {
   }
   next()
 })
+
 export default router

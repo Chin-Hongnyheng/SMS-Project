@@ -1,29 +1,28 @@
 <script setup lang="ts">
-const emit = defineEmits(['toggle'])
-
-const fas = {
-  bar: 'bars',
-  notification: 'bell',
-  message: 'comment-dots',
-  account: 'circle-user',
-}
+const emit = defineEmits<{ (event: 'toggle'): void }>()
 </script>
 
 <template>
   <header class="top-bar">
-
-    <button class="toggle-btn" @click="emit('toggle')">
-      <font-awesome-icon :icon="fas.bar" />
-    </button>
-
-    <div>
-        <input type="text" placeholder="Search" class="search-input" />
+    <div class="left-header">
+      <button @click="emit('toggle')" class="toggle-btn" aria-label="Toggle sidebar">
+        <font-awesome-icon :icon="['fas', 'bars']" class="menu-icon" />
+      </button>
+      <div class="search-container">
+        <input type="text" placeholder="Search" />
+      </div>
     </div>
 
     <div class="top-icons">
-      <font-awesome-icon :icon="fas.notification" class="each-icon"/>
-      <font-awesome-icon :icon="fas.message" class="each-icon" />
-      <font-awesome-icon :icon="fas.account" class="each-icon"/>
+      <span>
+        <font-awesome-icon :icon="['fas', 'bell']" class="top-bar-icon" />
+      </span>
+      <span>
+        <font-awesome-icon :icon="['fas', 'comment-dots']" class="top-bar-icon" />
+      </span>
+      <span>
+        <font-awesome-icon :icon="['fas', 'circle-user']" class="top-bar-icon" />
+      </span>
     </div>
   </header>
 </template>
@@ -31,55 +30,59 @@ const fas = {
 <style scoped>
 .top-bar {
   height: 70px;
+  width: 100%;
   display: flex;
-  justify-content: center;
+  padding: 0 30px;
+  justify-content: space-evenly;
   align-items: center;
-  /* padding: 0 30px; */
-  gap: 100px;
-  position: relative;
+  margin-bottom: 0;
+  flex-shrink: 0;
+  z-index: 10;
 }
 
 .left-header {
   display: flex;
-  gap: 20px;
   align-items: center;
+  gap: 20px;
+  flex: 1;
 }
 
 .toggle-btn {
+  font-size: 1.5rem;
   background: none;
   border: none;
-  color: #5ba4d5;
   cursor: pointer;
-  font-size: 30px;
-  position: absolute;
-  left: 30px;              
-  top: 50%;                
-  transform: translateY(-50%);
+  color: #5ba4d5;
 }
 
-.search-input {
-  font-family: 'Nunito';
-  font-weight: 900;
-  font-size: 20px;
-  color: rgb(189, 183, 183);
-  width: 1100px;
-  height: 40px;
-  border-radius: 10px;
-  border: none;
-  padding-left: 15px;
-  background-color: #efefef;
+.menu-icon {
+  font-size: 1.5rem;
 }
 
 .top-icons {
   display: flex;
   gap: 20px;
-  font-size: 30px;
+  align-items: center;
+}
+
+.top-bar-icon {
+  font-size: 1.5rem;
+  cursor: pointer;
   color: #5ba4d5;
 }
-.each-icon{
-  transition: transform 0.3s ease;
+
+.search-container input {
+  width: 800px;
+  height: 40px;
+  padding-left: 15px;
+  border-radius: 10px;
+  background-color: #efefef;
+  border: none;
 }
-.each-icon:hover{
-  transform: scale(1.2);
+
+@media (max-width: 768px) {
+  .search-container input {
+    width: 300px;
+  }
 }
 </style>

@@ -1,6 +1,7 @@
 import axios, { AxiosInstance } from 'axios'
+import { SMS_API_BASE_URL } from '@/config/api'
 
-const API_URL = 'http://localhost:3000'
+const API_URL = SMS_API_BASE_URL
 
 interface PaginatedResponse<T> {
   data: T[]
