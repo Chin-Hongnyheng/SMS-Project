@@ -129,7 +129,7 @@ const fetchStudents = async () => {
   if (!classId.value) return
   const now = new Date()
   const monthValue = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-  const response = await fetch(`${apiBaseUrl}/attendance?month=${monthValue}&classId=${classId.value}`)
+  const response = await fetch(`${apiBaseUrl}?month=${monthValue}&classId=${classId.value}`)
   if (!response.ok) {
     throw new Error('Failed to load attendance')
   }
@@ -153,7 +153,7 @@ const handleCheckIn = async () => {
   const date = `${monthValue}-${String(todayDay).padStart(2, '0')}`
 
   try {
-    const response = await fetch(`${apiBaseUrl}/attendance`, {
+    const response = await fetch(`${apiBaseUrl}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

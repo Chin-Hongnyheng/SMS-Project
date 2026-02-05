@@ -6,16 +6,19 @@ interface Student {
 }
 
 type CourseOption = { id: number; name: string }
+type ClassOption = { id: number; label: string }
 
 defineProps<{
   days: number[]
   students: Student[]
   courses: CourseOption[]
+  classOptions: ClassOption[]
   years: number[]
   modules: string[]
   selectedCourseId: number | null
   selectedYear: number | null
   selectedModule: string
+  selectedClassId: number | null
   selectedMonth: string
 }>()
 const emit = defineEmits<{
@@ -25,6 +28,7 @@ const emit = defineEmits<{
   (event: 'select-course', id: number): void
   (event: 'select-year', value: number): void
   (event: 'select-module', value: string): void
+  (event: 'select-class', id: number): void
   (event: 'select-month', value: string): void
   (event: 'delete-student', id: string): void
   (event: 'edit-student', student: Student): void
@@ -32,7 +36,7 @@ const emit = defineEmits<{
   (event: 'toggle-attendance', payload: { studentId: string; day: number; present: boolean }): void
 }>()
 
-const formatModuleLabel = (value: string) => value.replace(/^module\s*/i, 'Class ')
+const formatModuleLabel = (value: string) => value.replace(/^module\s*/i, 'Module ')
 </script>
 
 <template>
@@ -65,14 +69,28 @@ const formatModuleLabel = (value: string) => value.replace(/^module\s*/i, 'Class
             </option>
           </select>
         </label>
-        <label class="class-select">
-          <span>Class</span>
+        <label class="module-select">
+          <span>Module</span>
           <select
             :value="selectedModule"
             @change="emit('select-module', ($event.target as HTMLSelectElement).value)"
           >
             <option v-for="moduleValue in modules" :key="moduleValue" :value="moduleValue">
               {{ formatModuleLabel(moduleValue) }}
+            </option>
+          </select>
+        </label>
+        <label class="class-select">
+          <span>Class</span>
+          <select
+            :value="selectedClassId ?? ''"
+            @change="emit('select-class', Number(($event.target as HTMLSelectElement).value))"
+          >
+            <option v-if="classOptions.length === 0" value="" disabled>
+              No classes
+            </option>
+            <option v-for="klass in classOptions" :key="klass.id" :value="klass.id">
+              {{ klass.label }}
             </option>
           </select>
         </label>
@@ -184,7 +202,8 @@ const formatModuleLabel = (value: string) => value.replace(/^module\s*/i, 'Class
   flex-wrap: wrap;
 }
 
-.class-select {
+.class-select,
+.module-select {
   display: flex;
   align-items: center;
   gap: 8px;

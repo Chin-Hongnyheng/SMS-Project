@@ -9,6 +9,7 @@ import { ExamSchedulesModule } from "./exam-schedules/exam-schedules.module";
 import { ExamResultsModule } from "./exam-results/exam-results.module";
 import { ServeStaticModule } from "@nestjs/serve-static";
 import { join } from "path";
+import { AttendanceModule } from "./attendance/attendance.module";
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { join } from "path";
     }),
     CourseModule,
     CurriculumModule,
+    AttendanceModule,
     ExamTypesModule,
     ExamSchedulesModule,
     ExamResultsModule,
