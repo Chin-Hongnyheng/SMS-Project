@@ -13,7 +13,7 @@ const route = useRoute()
 
 // Compute whether to show layout
 const showLayout = computed(() => {
-  return route.path !== '/login' && route.path !== '/register'
+  return !['/login', '/register', '/attendance/check-in'].includes(route.path)
 })
 
 watch(route, () => {

@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import AttendanceTable from '../components/AttendanceTable.vue'
+import AttendanceScanner from '../components/AttendanceScanner.vue'
 import AddStudentModal from '../components/AddStudentModal.vue'
 import { ATTENDANCE_API_BASE_URL } from '@/config/api'
 
@@ -442,6 +443,12 @@ const handleToggleAttendance = async (payload: { studentId: string; day: number;
         <input v-model="searchQuery" type="search" placeholder="Search students" />
       </div>
     </header>
+
+    <AttendanceScanner
+      :class-id="selectedClassId"
+      :class-label="selectedClassLabel"
+      :students-count="students.length"
+    />
 
     <AttendanceTable
       :days="days"

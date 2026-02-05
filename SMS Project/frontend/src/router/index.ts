@@ -23,6 +23,11 @@ const router = createRouter({
       name: 'attendance',
       component: AttendanceView,
     },
+    {
+      path: '/attendance/check-in',
+      name: 'attendance-check-in',
+      component: () => import('../views/AttendanceCheckInView.vue'),
+    },
   ],
 })
 
