@@ -41,9 +41,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: sms
     ports:
-      - "5432:5432"
-    # networks:
-    #   - "sms_network"
+      - "5436:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
   auth-service:

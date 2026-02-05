@@ -1,7 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import CurriculumView from '../views/CurriculumView.vue'
-import AttendanceView from '../views/AttendanceView.vue'
-import HomeView from '../views/HomeView.vue'
 
 const router = createRouter({
   history: createWebHistory('/'),
@@ -27,6 +24,24 @@ const router = createRouter({
       component: () => import('../views/DashboardView.vue'),
     },
     {
+      path: '/dashboard/admin',
+      name: 'dashboard-admin',
+      meta: { requiresAuth: true, roles: ['Admin'] },
+      component: () => import('../views/AdminDashboard.vue'),
+    },
+    {
+      path: '/dashboard/teacher',
+      name: 'dashboard-teacher',
+      meta: { requiresAuth: true, roles: ['Teacher'] },
+      component: () => import('../views/TeacherDashboard.vue'),
+    },
+    {
+      path: '/dashboard/student',
+      name: 'dashboard-student',
+      meta: { requiresAuth: true, roles: ['Student'] },
+      component: () => import('../views/StudentDashboard.vue'),
+    },
+    {
       path: '/admission',
       name: 'admission',
       meta: { requiresAuth: true, roles: ['Teacher', 'Admin'] },
@@ -35,6 +50,7 @@ const router = createRouter({
     {
       path: '/student',
       name: 'student',
+      alias: '/students',
       meta: { requiresAuth: true, roles: ['Teacher', 'Admin'] },
       component: () => import('../views/StudentView.vue'),
     },
@@ -43,6 +59,12 @@ const router = createRouter({
       name: 'academic',
       meta: { requiresAuth: true, roles: ['Student', 'Teacher', 'Admin'] },
       component: () => import('../views/AcademicView.vue'),
+    },
+    {
+      path: '/curriculum',
+      name: 'curriculum',
+      meta: { requiresAuth: true, roles: ['Student', 'Teacher', 'Admin'] },
+      component: () => import('../views/CurriculumView.vue'),
     },
     {
       path: '/curriculum/:id',
@@ -121,6 +143,7 @@ const router = createRouter({
     },
   ],
 })
+
 router.beforeEach((to, from, next) => {
   const token = sessionStorage.getItem('token')
   const roles: string[] = JSON.parse(sessionStorage.getItem('roles') || '[]')
@@ -137,4 +160,5 @@ router.beforeEach((to, from, next) => {
   }
   next()
 })
+
 export default router

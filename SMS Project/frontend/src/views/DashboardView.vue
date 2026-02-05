@@ -1,5 +1,8 @@
 <template>
-  <div>
+  <AdminDashboard v-if="dashboardType === 'admin'" />
+  <TeacherDashboard v-else-if="dashboardType === 'teacher'" />
+  <StudentDashboard v-else-if="dashboardType === 'student'" />
+  <div v-else class="fallback">
     <h1>Welcome, {{ username }}!</h1>
     <p>User ID: {{ userId !== null ? userId : 'Guest' }}</p>
     <p v-if="roles.length">
@@ -13,9 +16,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
+import AdminDashboard from './AdminDashboard.vue'
+import TeacherDashboard from './TeacherDashboard.vue'
+import StudentDashboard from './StudentDashboard.vue'
 
-// Function to decode JWT
+const roles = ref<string[]>([])
+const username = ref('Guest')
+const userId = ref<number | null>(null)
+
 function parseJwt(token: string) {
   try {
     const base64Url = token.split('.')[1]
@@ -26,24 +35,29 @@ function parseJwt(token: string) {
   }
 }
 
-const username = ref('Guest')
-const roles = ref<string[]>([])
-const userId = ref<number | null>(null)
-
 onMounted(() => {
-  // ✅ Make sure access token is stored in sessionStorage
-  const token = sessionStorage.getItem('token') // same key you used in loginView
+  const token = sessionStorage.getItem('token')
   if (token) {
     const payload = parseJwt(token)
     if (payload) {
       username.value = payload.username || 'Guest'
       roles.value = payload.roles || []
-      userId.value = payload.sub || null // ← this is the user ID
+      userId.value = payload.sub || null
     }
   }
+})
 
-  console.log('Dashboard username:', username.value)
-  console.log('Dashboard roles:', roles.value)
-  console.log('Dashboard userId:', userId.value)
+const dashboardType = computed(() => {
+  const normalizedRoles = roles.value.map((r) => r.toLowerCase())
+  if (normalizedRoles.includes('admin')) return 'admin'
+  if (normalizedRoles.includes('teacher')) return 'teacher'
+  if (normalizedRoles.includes('student')) return 'student'
+  return 'guest'
 })
 </script>
+
+<style scoped>
+.fallback {
+  padding: 20px;
+}
+</style>
