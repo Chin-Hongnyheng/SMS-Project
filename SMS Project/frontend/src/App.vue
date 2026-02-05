@@ -123,7 +123,20 @@
   </div>    
 </template>
 
-<style scoped>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body, html {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100%;
+    height: 100%;
+    background-color: #fcfaf6;
+  }
 .app-layout {
   display: flex;
   min-height: 100vh;  
@@ -140,15 +153,15 @@
   color: white;
   display: flex;
   flex-direction: column;
-  padding: 25px;
-  border-radius: 20px;
+  padding: 20px;
+  border-radius: 0px 20px 20px 0px;
   transition: width 0.3s ease;
   flex-shrink: 0;
 }
 
 .sidebar.collasped {
   width: 80px;
-  padding: 20px 10px;
+  padding: 20px 12.5px;
 }
 .logo-section {
   text-align: center;
@@ -204,7 +217,7 @@
   background-color: #a0d2eb;
   color: black !important;
   text-decoration: none;
-  border-radius: 10px;
+  border-radius: 25px;
   font-weight: bold;
 }
 
@@ -212,7 +225,7 @@
   background-color: #a0d2eb;
   border: none;
   padding: 12px 15px;
-  border-radius: 10px;
+  border-radius: 30px;
   font-weight: bold;
   font-size: 1.15rem;
   text-align: center;
@@ -276,7 +289,7 @@
 
 .page-content {
   flex-grow: 1;
-  overflow-y: visible; /* allow scrolling if content is bigger */
+  overflow-y: visible;
   padding: 30px;
   background-color: #fcfaf6;
 }
@@ -295,24 +308,6 @@
 a {
   text-decoration: none;
   color: black;
-}
-
-/* This removes default gaps from all elements */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-/* Ensure the layout takes the full screen */
-body, html {
-  /* width: 100%;
-  height: 100%; */
-  /* background-color: #fcfaf6; Match your beige background */
-
-  height: 100%;
-  width: 100%;
-  overflow-y: auto; /* allow page scrolling */
 }
 
 </style>

@@ -1,7 +1,10 @@
 <template>
   <div class="student-page px-6">
-    <div class="page-header flex items-center justify-between mb-6">
+    <div class="page-header">
       <h1 class="text-2xl font-bold text-gray-700">Student Management</h1>
+      
+    </div>
+    <div class="btn-position">
       <button class="add-btn" @click="showModal = true">+ Add Student</button>
     </div>
 
@@ -10,17 +13,28 @@
       <div class="filter-group">
         <input v-model="searchQuery" @input="fetchStudents" type="text" placeholder="Search by name or ID..." class="search-input" />
         
-        <select v-model="filterGender" @change="fetchStudents">
-          <option value="">All Genders</option>
-          <option value="Male">Male</option>
-          <option value="Female">Female</option>
+        <select v-model="filterMajor" @change="fetchStudents">
+          <option value="">All Major</option>
+          <option value="Bachelor degree in Nursing and Midwifery">Nursing and Midwifery</option>
+          <option value="Associate degree in Nurse">Associate Nurse</option>
+          <option value="Continue Primary Nurse to Associate degree">Nurse AD</option>
+          <option value="Continue Primary Midwife to Associate degree">Midwife AD</option>
+          <option value="Associate degree in Midwifery">Midwifery AD</option>
         </select>
 
-        <select v-model="filterClass" @change="fetchStudents">
-          <option value="">All Classes</option>
-          <option value="10A">10A</option>
-          <option value="10B">10B</option>
-          <option value="11A">11A</option>
+        <select v-model="filterYear" @change="fetchStudents">
+          <option value="">All Year</option>
+          <option value="1">Year 1</option>
+          <option value="2">Year 2</option>
+          <option value="3">Year 3</option>
+          <option value="4">Year 4</option>
+          <option value="5">Year 5</option>
+        </select>
+
+        <select v-model="filterGroup" @change="fetchStudents">
+          <option value="">All Group</option>
+          <option value="Group A">Group A</option>
+          <option value="Group B">Group B</option>
         </select>
       </div>
     </div>
@@ -91,10 +105,14 @@ const showModal = ref(false)
 const searchQuery = ref('')
 const filterGender = ref('')
 const filterClass = ref('')
+const filterMajor = ref('')
+const filterGroup = ref('')
+const filterYear = ref('')
 
 const newStudent = ref({
   name: '', studentId: '', class: '', generation: '',
-  location: '', contact: '', gender: 'Male', exam: ''
+  location: '', contact: '', gender: 'Male', exam: '',
+  major: 'Associate degree in Nurse', year: '1', group: 'Group A'
 })
 
 const fetchStudents = async () => {
@@ -102,7 +120,10 @@ const fetchStudents = async () => {
     const params = {
       search: searchQuery.value,
       gender: filterGender.value,
-      class: filterClass.value
+      class: filterClass.value,
+      major: filterMajor.value,
+      year: filterYear.value,
+      group: filterGroup.value,
     }
     const res = await api.get('/students', { params })
     students.value = res.data
@@ -117,7 +138,7 @@ const submitStudent = async () => {
     showModal.value = false
     fetchStudents()
     // Reset form
-    newStudent.value = { name: '', studentId: '', class: '', generation: '', location: '', contact: '', gender: 'Male', exam: '' }
+    newStudent.value = { name: '', studentId: '', class: '', generation: '', location: '', contact: '', gender: 'Male', exam: '', major: '', year:'', group: '' }
   } catch (err) {
     alert("Check if Student ID is unique.")
   }
@@ -133,6 +154,10 @@ const handleDelete = async (id: number) => {
 onMounted(fetchStudents)
 </script>
 <style scoped>
+.page-header {
+  display: flex;
+  justify-content: center;
+}
 .modal-overlay {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
   background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;
@@ -148,11 +173,28 @@ onMounted(fetchStudents)
   width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;
 }
 .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px; }
-.save-btn { background: #A5A6F6; color: white; border: none; padding: 10px 25px; border-radius: 8px; cursor: pointer; }
+.save-btn { background: #5ba4d5; color: white; border: none; padding: 10px 25px; border-radius: 8px; cursor: pointer; }
 .cancel-btn { background: #eee; border: none; padding: 10px 25px; border-radius: 8px; cursor: pointer; }
-.add-btn { background: #A5A6F6; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
-.filter-card { background: white; padding: 15px; border-radius: 12px; }
-.filter-group { display: flex; gap: 15px; }
+.add-btn { 
+  background: #5ba4d5; 
+  color: white; 
+  border: none; 
+  padding: 10px 20px; 
+  border-radius: 8px; 
+  cursor: pointer; 
+}
+.filter-card { 
+  background: white; 
+  padding: 10px; 
+  border-radius: 10px;
+  margin-top: 15px;
+  margin-left: 25px;
+  width: 95%;
+}
+.filter-group { 
+  display: flex; 
+  gap: 15px; 
+}
 .search-input { flex: 2; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
 select { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
 .student-page { padding: 20px; background: #f4f7f9; min-height: 100vh; }
@@ -160,5 +202,11 @@ select { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
 .modal-content { background: white; padding: 30px; border-radius: 20px; width: 600px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
 .input-item label { font-weight: 600; color: #555; font-size: 13px; }
 .input-item input, select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; margin-top: 5px; }
-.save-btn { background: #A5A6F6; color: white; padding: 10px 25px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; }
+.save-btn { background: #5ba4d5; color: white; padding: 10px 25px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; }
+.btn-position {
+  display: flex;
+  justify-content: flex-end;
+  width: 100;
+  margin-right: 40px;
+}
 </style>

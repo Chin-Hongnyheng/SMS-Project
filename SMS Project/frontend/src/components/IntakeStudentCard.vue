@@ -7,9 +7,9 @@
       <span class="header-item">No</span>
       <span class="header-item">Student</span>
       <span class="header-item">Student ID</span>
-      <span class="header-item">Class</span>
-      <span class="header-item">Generation</span>
-      <span class="header-item">Location</span>
+      <span class="header-item">Group</span>
+      <span class="header-item">Year</span>
+      <span class="header-item">Major</span>
       <span class="header-item">Contact</span>
       <span class="header-item">Action</span>
     </div>
@@ -20,9 +20,9 @@
         <span class="data-item">{{ index + 1 }}</span>
         <span class="data-item font-bold">{{ student.name }}</span>
         <span class="data-item">{{ student.studentId }}</span>
-        <span class="data-item">{{ student.class }}</span>
-        <span class="data-item">{{ student.generation }}</span>
-        <span class="data-item">{{ student.location }}</span>
+        <span class="data-item">{{ student.group }}</span>
+        <span class="data-item">{{ student.year }}</span>
+        <span class="data-item">{{ student.major }}</span>
         <span class="data-item">{{ student.contact }}</span>
         <span class="data-item">
           <button class="action-btn edit">Edit</button>
@@ -49,6 +49,7 @@ defineEmits(['delete']);
   padding: 20px;
   display: flex;
   flex-direction: column;
+  margin-top: 15px;
 }
 
 /* Title */

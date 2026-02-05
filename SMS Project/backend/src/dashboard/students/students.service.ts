@@ -17,30 +17,45 @@ export class StudentsService {
     return this.studentRepository.save(student);
   }
 
-  async findAll(search?: string, gender?: string, className?: string) {
+  async findAll(
+    search?: string,
+    gender?: string,
+    className?: string,
+    major?: string,
+    year?: string,
+    group?: string,
+  ) {
     const baseFilters: FindOptionsWhere<Student> = {};
 
-    if (gender && gender.trim() !== '') {
-      baseFilters.gender = gender;
+    if (major && major !== '') baseFilters.major = major;
+    if (year && year !== '') {
+      const yearNum = Number(year);
+      if (!isNaN(yearNum)) {
+        baseFilters.year = yearNum;
+      }
     }
-    if (className && className.trim() !== '') {
-      baseFilters.class = className;
-    }
-
-    if (search && search.trim() !== '') {
-      const searchPattern = Like(`%${search}`);
+    if (group && group !== '') baseFilters.group = group;
+    try {
+      if (search && search.trim() !== '') {
+        const searchPattern = Like(`%${search}%`);
+        return await this.studentRepository.find({
+          where: [
+            { ...baseFilters, name: searchPattern },
+            { ...baseFilters, studentId: searchPattern },
+            { ...baseFilters, location: searchPattern },
+            { ...baseFilters, exam: searchPattern },
+          ],
+          order: { createdAt: 'DESC' },
+        });
+      }
       return await this.studentRepository.find({
-        where: [
-          { ...baseFilters, name: searchPattern },
-          { ...baseFilters, studentId: searchPattern },
-        ],
+        where: baseFilters,
         order: { createdAt: 'DESC' },
       });
+    } catch (error) {
+      console.error('Database Query Error:', error);
+      throw error;
     }
-    return await this.studentRepository.find({
-      where: baseFilters,
-      order: { createdAt: 'DESC' },
-    });
   }
   async remove(id: number) {
     return await this.studentRepository.delete(id);

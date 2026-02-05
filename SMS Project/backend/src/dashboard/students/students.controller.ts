@@ -19,8 +19,19 @@ export class StudentsController {
     @Query('search') search?: string,
     @Query('gender') gender?: string,
     @Query('class') className?: string,
+    @Query('major') major?: string,
+    @Query('year') year?: string,
+    @Query('group') group?: string,
   ) {
-    return this.studentsService.findAll(search, gender, className);
+    console.log('backend received!!!', { search, major, group, year });
+    return this.studentsService.findAll(
+      search,
+      className,
+      gender,
+      major,
+      year,
+      group,
+    );
   }
 
   @Get('count')

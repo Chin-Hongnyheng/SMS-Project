@@ -30,6 +30,15 @@ export class Student {
   class: string;
 
   @Column()
+  major: string;
+
+  @Column()
+  group: string;
+
+  @Column()
+  year: number;
+
+  @Column()
   generation: string;
 
   @Column()

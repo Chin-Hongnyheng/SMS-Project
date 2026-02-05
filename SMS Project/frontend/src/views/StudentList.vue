@@ -1,7 +1,7 @@
 <template>
   <div class="student-page px-6">
     <!-- Page Title and Add Button -->
-    <div class="page-header flex items-center justify-between mb-4">
+    <div class="page-header">
       <h1 class="text-2xl font-bold text-gray-700">Student List</h1>
       <button class="add-btn" @click="showForm = true">Add Student</button>
     </div>
@@ -95,10 +95,11 @@ const cancelForm = () => {
 <style scoped>
 .student-page {
   padding-top: 20px;
+  position: relative;
 }
 
-.add-btn {
-  background-color: #4caf50;
+/* .add-btn {
+  background-color: #5ba4d5;
   color: white;
   border: none;
   padding: 8px 16px;
@@ -106,7 +107,7 @@ const cancelForm = () => {
   cursor: pointer;
   font-weight: 600;
   transition: background 0.2s;
-}
+} */
 
 .add-btn:hover {
   background-color: #45a049;
@@ -123,13 +124,21 @@ const cancelForm = () => {
 
 .page-header {
   display: flex;
+  /* justify-content: space-between; */
   align-items: center;
-  justify-content: space-between;
+  width: 100%; 
+}
+
+.page-header .add-btn{
+  position: absolute;
+  top: 0;
+  right: 0;
 }
 
 .add-form {
   display: flex;
   flex-direction: column;
+  justify-content: flex-end;
   gap: 8px;
 }
 
