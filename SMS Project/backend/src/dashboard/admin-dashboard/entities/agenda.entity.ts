@@ -1,9 +1,4 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-} from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
 
 @Entity()
 export class Agenda {
@@ -13,11 +8,14 @@ export class Agenda {
   @Column()
   title: string;
 
-  @Column({ nullable: true })
+  @Column()
   description: string;
 
   @Column()
   date: string;
+
+  @Column()
+  time: string;
 
   @CreateDateColumn()
   createdAt: Date;
