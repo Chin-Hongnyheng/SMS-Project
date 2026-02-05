@@ -366,6 +366,8 @@ defineExpose({ validateForm, submitForm })
   gap: 60px;
   align-items: center;
   justify-items: center;
+  flex-wrap: wrap;
+  row-gap: 12px;
 }
 
 .registration-container {
@@ -376,6 +378,8 @@ defineExpose({ validateForm, submitForm })
   margin: 30px;
   align-items: center;
   font-family: 'Nunito';
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .registration-container-inner {
@@ -383,6 +387,8 @@ defineExpose({ validateForm, submitForm })
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .registration-title {
@@ -425,6 +431,9 @@ defineExpose({ validateForm, submitForm })
   justify-content: center;
   align-items: flex-start;
   gap: 30px;
+  width: 100%;
+  max-width: 1200px;
+  box-sizing: border-box;
 }
 
 .header-title-english {
@@ -457,6 +466,8 @@ defineExpose({ validateForm, submitForm })
   padding-left: 16px;
   transition: all 0.3s ease;
   background-color: #fff;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .filling-name-khmer {
@@ -504,6 +515,8 @@ defineExpose({ validateForm, submitForm })
   outline: none;
   transition: all 0.3s ease;
   background-color: #fff;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .address:focus {
@@ -520,8 +533,10 @@ defineExpose({ validateForm, submitForm })
 .gender {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 30px;
+  flex-wrap: wrap;
+  row-gap: 12px;
 }
 
 .option-box {
@@ -562,6 +577,8 @@ defineExpose({ validateForm, submitForm })
   color: rgb(165, 164, 170);
   padding: 0 12px;
   cursor: pointer;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .date-input:focus {
@@ -589,11 +606,15 @@ input[type="date"] {
 .status-gender {
   display: flex;
   gap: 60px;
+  flex-wrap: wrap;
+  row-gap: 16px;
 }
 
 .inner-content {
   display: flex;
   gap: 30px;
+  flex-wrap: wrap;
+  row-gap: 12px;
 }
 
 .option-box.disabled {
