@@ -5,9 +5,12 @@ import { CurriculumController } from './curriculum.controller';
 import { Subject } from './entities/curriculum.entity';
 import { Lecture } from './entities/lecture.entity';
 import { Announcement } from './entities/announcement.entity';
+import { Assignment } from './entities/assignment.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Subject, Lecture, Announcement])],
+  imports: [
+    TypeOrmModule.forFeature([Subject, Lecture, Announcement, Assignment]),
+  ],
   controllers: [CurriculumController],
   providers: [CurriculumService],
 })

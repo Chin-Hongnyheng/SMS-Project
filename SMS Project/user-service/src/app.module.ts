@@ -1,17 +1,22 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { AuthModule } from './auth/auth.module';
-import { UsersModule } from './users/users.module';
-import { DatabaseModule } from './database/database.module'
+import { UserInfoModule } from './userinfo/userinfo.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
 import { ConfigModule } from '@nestjs/config';
+import { join } from 'path';
+import { DatabaseModule } from './database/database.module';
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'),
+      serveRoot: '/uploads',
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '../.env',
     }),
-    AuthModule, UsersModule, DatabaseModule],
+    UserInfoModule, DatabaseModule],
   controllers: [AppController],
   providers: [AppService],
 })

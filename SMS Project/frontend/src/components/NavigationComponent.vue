@@ -79,7 +79,7 @@ const navItems = [
   { path: '/admission', title: 'Admission', icon: fas.admissions, roles: ['admin', 'teacher'] },
   { path: '/student', title: 'Student', icon: fas.student, roles: ['admin', 'teacher'] },
   { path: '/academic', title: 'Academic', icon: fas.academic, roles: ['admin', 'teacher', 'user'] },
-  { path: '/examination', title: 'Examination', icon: fas.examination, roles: ['admin', 'teacher', 'user'] },
+  { path: '/examination', title: 'Examination', icon: fas.examination, roles: ['admin', 'teacher'] },
   { path: '/attendance', title: 'Attendance', icon: fas.attendance, roles: ['admin', 'teacher'] },
   { path: '/transcript', title: 'Transcript', icon: fas.transcript, roles: ['admin', 'teacher', 'user'] },
   { path: '/registration', title: 'Registration', icon: fas.registration, roles: ['user'] },

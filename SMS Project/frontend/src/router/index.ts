@@ -54,8 +54,26 @@ const router = createRouter({
     {
       path: '/examination',
       name: 'examination',
-      meta: { requiresAuth: true, roles: ['user', 'teacher', 'admin'] },
+      meta: { requiresAuth: true, roles: ['teacher', 'admin'] },
       component: () => import('../views/ExaminationView.vue'),
+    },
+    {
+      path: '/exam-types',
+      name: 'exam-types',
+      meta: { requiresAuth: true, roles: ['teacher', 'admin'] },
+      component: () => import('../views/ExamTypeView.vue'),
+    },
+    {
+      path: '/exam-schedules',
+      name: 'exam-schedules',
+      meta: { requiresAuth: true, roles: ['teacher', 'admin'] },
+      component: () => import('../views/ExamScheduleView.vue'),
+    },
+    {
+      path: '/exam-results',
+      name: 'exam-results',
+      meta: { requiresAuth: true, roles: ['teacher', 'admin'] },
+      component: () => import('../views/ExamResultView.vue'),
     },
     {
       path: '/attendance',

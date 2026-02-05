@@ -59,6 +59,20 @@ services:
         - postgres
       env_file:
         - ./auth-service/.env
+
+  user-service:
+      build: ./user-service
+      container_name: sms-user-service
+      command: npm run start:dev
+      ports:
+        - "3002:3000"
+      volumes:
+        - ./user-service:/app
+        - /app/node_modules
+      depends_on:
+        - postgres
+      env_file:
+        - ./user-service/.env
 volumes:
   pgdata:
 
