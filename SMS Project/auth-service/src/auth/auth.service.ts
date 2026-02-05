@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
@@ -19,12 +23,15 @@ export class AuthService {
     private readonly jwt: JwtService,
     @InjectRepository(User) private readonly users: Repository<User>,
     @InjectRepository(Role) private readonly roles: Repository<Role>,
-    @InjectRepository(UserRole) private readonly userRoles: Repository<UserRole>,
-    @InjectRepository(RolePermission) private readonly rolePerms: Repository<RolePermission>,
-    @InjectRepository(RefreshToken) private readonly refreshTokens: Repository<RefreshToken>,
+    @InjectRepository(UserRole)
+    private readonly userRoles: Repository<UserRole>,
+    @InjectRepository(RolePermission)
+    private readonly rolePerms: Repository<RolePermission>,
+    @InjectRepository(RefreshToken)
+    private readonly refreshTokens: Repository<RefreshToken>,
   ) {}
 
-    private blockedNames = [
+  private blockedNames = [
     'admin',
     'root',
     'system',
@@ -42,9 +49,9 @@ export class AuthService {
   }
 
   async findByEmail(email: string): Promise<boolean> {
-  const user = await this.users.findOne({ where: { email } });
-  return !!user;
-}
+    const user = await this.users.findOne({ where: { email } });
+    return !!user;
+  }
 
   async findByUsername(username: string): Promise<boolean> {
     const user = await this.users.findOne({ where: { username } });
@@ -57,30 +64,29 @@ export class AuthService {
 
     // Create the user
     const user = this.users.create({
-        username,
-        email,
-        passwordHash,
-        isActive: true,
+      username,
+      email,
+      passwordHash,
+      isActive: true,
     });
     await this.users.save(user);
 
     // Determine role to assign
-    const roleName = role?.toLowerCase() || 'user'; // default to 'user'
+    const roleName = role?.toLowerCase() || 'Student'; // default to 'user'
     const roleEntity = await this.roles.findOne({ where: { name: roleName } });
     if (!roleEntity) {
-        throw new BadRequestException(`Role "${roleName}" not found`);
+      throw new BadRequestException(`Role "${roleName}" not found`);
     }
 
     // Assign role
     const userRole = this.userRoles.create({
-        user: { id: user.id },
-        role: { id: roleEntity.id },
+      user: { id: user.id },
+      role: { id: roleEntity.id },
     });
     await this.userRoles.save(userRole);
 
     return { message: `User registered successfully with role "${roleName}"` };
-}
-
+  }
 
   // --- LOGIN ---
   async login(dto: LoginDto) {
@@ -120,7 +126,7 @@ export class AuthService {
       },
       {
         secret: process.env.JWT_ACCESS_SECRET,
-        expiresIn: process.env.JWT_ACCESS_EXPIRES as any || '15m',
+        expiresIn: (process.env.JWT_ACCESS_EXPIRES as any) || '15m',
       },
     );
 
@@ -140,5 +146,4 @@ export class AuthService {
 
     return { accessToken, refreshToken };
   }
-
 }
