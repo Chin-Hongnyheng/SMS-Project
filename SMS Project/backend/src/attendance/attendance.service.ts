@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Between, Repository } from 'typeorm'
 import { AttendanceRecord, ClassEntity, CourseEntity, Student } from './entities'
-const DEFAULT_CLASS_NAMES = ['Class A', 'Class B']
 const DEFAULT_COURSE_NAMES = [
   'Bachelor degree in Nursing and Midwifery',
   'Associate degree in Nurse',
@@ -10,6 +9,8 @@ const DEFAULT_COURSE_NAMES = [
   'Continue Primary Midwife to Associate degree',
   'Continue Primary Nurse to Associate degree',
 ]
+const ALLOWED_YEARS = new Set([1, 2, 3, 4, 5])
+const ALLOWED_MODULES = ['Module 1', 'Module 2', 'Module 3', 'Module 4', 'Module 5']
 
 @Injectable()
 export class AttendanceService {
@@ -62,32 +63,32 @@ export class AttendanceService {
   }
 
   async ensureDefaultClasses(): Promise<ClassEntity[]> {
-    const existingClasses = await this.classRepo.find({
+    let classes = await this.classRepo.find({
       order: { id: 'ASC' },
       relations: { course: true },
     })
-    if (existingClasses.length > 0) {
-      return existingClasses
+
+    if (classes.length === 0) {
+      return classes
     }
 
     const courses = await this.ensureDefaultCourses()
     const defaultCourse = courses[0] ?? null
-    if (!defaultCourse) {
-      return []
+    if (defaultCourse) {
+      const missingCourse = classes.filter((item) => !item.course)
+      if (missingCourse.length > 0) {
+        for (const item of missingCourse) {
+          item.course = defaultCourse
+          await this.classRepo.save(item)
+        }
+        classes = await this.classRepo.find({
+          order: { id: 'ASC' },
+          relations: { course: true },
+        })
+      }
     }
 
-    const created: ClassEntity[] = []
-    for (const [index, name] of DEFAULT_CLASS_NAMES.entries()) {
-      const newClass = this.classRepo.create({
-        name,
-        course: defaultCourse,
-        year: 1,
-        module: `Module ${index + 1}`,
-      })
-      created.push(await this.classRepo.save(newClass))
-    }
-
-    return created
+    return classes
   }
 
   private getMonthRange(month?: string) {
@@ -110,36 +111,12 @@ export class AttendanceService {
   }
 
   async getClasses() {
-    const courses = await this.ensureDefaultCourses()
-    const defaultCourse = courses[0] ?? null
+    const classes = await this.ensureDefaultClasses()
+    const filtered = classes.filter(
+      (item) => ALLOWED_YEARS.has(item.year) && ALLOWED_MODULES.includes(item.module),
+    )
 
-    let classes = await this.classRepo.find({
-      order: { id: 'ASC' },
-      relations: { course: true },
-    })
-    if (classes.length === 0) {
-      await this.ensureDefaultClasses()
-      classes = await this.classRepo.find({
-        order: { id: 'ASC' },
-        relations: { course: true },
-      })
-    }
-
-    if (defaultCourse) {
-      const missingCourse = classes.filter((item) => !item.course)
-      if (missingCourse.length > 0) {
-        for (const item of missingCourse) {
-          item.course = defaultCourse
-          await this.classRepo.save(item)
-        }
-        classes = await this.classRepo.find({
-          order: { id: 'ASC' },
-          relations: { course: true },
-        })
-      }
-    }
-
-    return classes.map((item) => ({
+    return filtered.map((item) => ({
       id: item.id,
       name: item.name,
       year: item.year,
@@ -167,29 +144,59 @@ export class AttendanceService {
     }
 
     const year = payload.year ? Number(payload.year) : 1
-    const moduleName = payload.module?.trim() || 'Module 1'
+    if (!ALLOWED_YEARS.has(year)) {
+      throw new Error('Year must be between 1 and 5')
+    }
 
-    const existing = await this.classRepo.findOne({
+    const moduleRaw = payload.module?.trim() || 'Module 1'
+    const moduleName =
+      ALLOWED_MODULES.find((value) => value.toLowerCase() === moduleRaw.toLowerCase()) ?? null
+    if (!moduleName) {
+      throw new Error('Module must be Module 1-5')
+    }
+
+    const existing = await this.classRepo.find({
       where: {
         course: { id: course.id },
         year,
         module: moduleName,
       },
       relations: { course: true },
+      order: { id: 'ASC' },
     })
 
-    if (existing) {
-      return {
-        id: existing.id,
-        name: existing.name,
-        year: existing.year,
-        module: existing.module,
-        courseId: existing.course?.id ?? null,
-        courseName: existing.course?.name ?? 'Unknown Course',
+    const trimmedName = payload.name?.trim()
+    if (trimmedName) {
+      const duplicate = existing.find(
+        (item) => item.name.trim().toLowerCase() === trimmedName.toLowerCase(),
+      )
+      if (duplicate) {
+        return {
+          id: duplicate.id,
+          name: duplicate.name,
+          year: duplicate.year,
+          module: duplicate.module,
+          courseId: duplicate.course?.id ?? null,
+          courseName: duplicate.course?.name ?? 'Unknown Course',
+        }
       }
     }
 
-    const name = payload.name?.trim() || `${course.name} - Year ${year} - ${moduleName}`
+    let name = trimmedName
+    if (!name) {
+      const usedNumbers = new Set<number>()
+      for (const item of existing) {
+        const match = item.name.match(/class\s*(\d+)/i)
+        if (match) {
+          usedNumbers.add(Number(match[1]))
+        }
+      }
+      let nextNumber = 1
+      while (usedNumbers.has(nextNumber)) {
+        nextNumber += 1
+      }
+      name = `Class ${nextNumber}`
+    }
     const created = this.classRepo.create({
       name,
       course,
@@ -224,18 +231,13 @@ export class AttendanceService {
       classEntity = await this.classRepo.findOne({ where: { id: classId } })
     }
 
-    if (!classEntity) {
-      const classes = await this.ensureDefaultClasses()
-      classEntity = classes[0] ?? null
-    }
-
-    if (!classEntity) {
-      return { days: [], students: [] }
-    }
-
     const { start, end } = this.getMonthRange(month)
     const totalDays = end.getUTCDate()
     const days = Array.from({ length: totalDays }, (_, index) => index + 1)
+
+    if (!classEntity) {
+      return { days, students: [] }
+    }
 
     const classStudents = await this.studentRepo.find({
       where: { classEntity: { id: classEntity.id } },
@@ -277,11 +279,6 @@ export class AttendanceService {
 
     if (payload.classId) {
       classEntity = await this.classRepo.findOne({ where: { id: payload.classId } })
-    }
-
-    if (!classEntity) {
-      const classes = await this.ensureDefaultClasses()
-      classEntity = classes[0] ?? null
     }
 
     if (!classEntity) {

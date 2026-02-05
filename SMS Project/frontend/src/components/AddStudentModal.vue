@@ -29,14 +29,11 @@ const formError = ref('')
 const isSubmitting = ref(false)
 const studentClassId = ref<number | null>(null)
 
-const canCreateClass = computed(
-  () => Boolean(props.selectedCourseId) && Boolean(props.selectedYear) && props.selectedModule.trim() !== '',
-)
 const canSubmit = computed(
   () =>
     formName.value.trim() !== '' &&
     formCode.value.trim() !== '' &&
-    (Boolean(studentClassId.value) || canCreateClass.value),
+    Boolean(studentClassId.value),
 )
 
 const resetForm = () => {
@@ -99,35 +96,6 @@ watch(
   },
 )
 
-const ensureClassId = async () => {
-  if (studentClassId.value) return studentClassId.value
-  if (!canCreateClass.value) return null
-
-  const response = await fetch(`${props.apiBaseUrl}/classes`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      courseId: props.selectedCourseId,
-      year: props.selectedYear,
-      module: props.selectedModule.trim(),
-    }),
-  })
-
-  if (!response.ok) {
-    formError.value = 'Failed to create class'
-    return null
-  }
-
-  const data = await response.json()
-  if (!data?.id) {
-    formError.value = 'Failed to create class'
-    return null
-  }
-
-  studentClassId.value = Number(data.id)
-  return studentClassId.value
-}
-
 const close = () => {
   if (isSubmitting.value) return
   emit('close')
@@ -139,9 +107,9 @@ const submitStudent = async () => {
   formError.value = ''
 
   try {
-    const classId = await ensureClassId()
+    const classId = studentClassId.value
     if (!classId) {
-      formError.value = 'No class selected'
+      formError.value = 'Create a class first.'
       return
     }
 
@@ -198,7 +166,7 @@ const submitStudent = async () => {
         <label class="modal-field">
           <span>Class</span>
           <template v-if="classOptions.length > 0">
-            <select v-model.number="studentClassId" disabled>
+            <select v-model.number="studentClassId">
               <option v-for="klass in classOptions" :key="klass.id" :value="klass.id">
                 {{ klass.label }}
               </option>
@@ -209,7 +177,7 @@ const submitStudent = async () => {
           </template>
         </label>
         <p v-if="classOptions.length === 0" class="modal-hint">
-          No class found yet for this course/year/class. It will be created when you save.
+          No class found yet for this course/year/module. Create a class first.
         </p>
         <p v-if="formError" class="modal-error">{{ formError }}</p>
       </div>

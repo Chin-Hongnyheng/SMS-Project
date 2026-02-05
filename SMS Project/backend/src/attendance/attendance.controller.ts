@@ -1,7 +1,10 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common'
 import { AttendanceService } from './attendance.service'
 
-@Controller()
+const ALLOWED_YEARS = new Set([1, 2, 3, 4, 5])
+const ALLOWED_MODULES = ['Module 1', 'Module 2', 'Module 3', 'Module 4', 'Module 5']
+
+@Controller('attendance')
 export class AttendanceController {
   constructor(private readonly attendanceService: AttendanceService) {}
 
@@ -24,11 +27,24 @@ export class AttendanceController {
       return { error: 'courseId or name is required' }
     }
 
+    const year = body.year ? Number(body.year) : 1
+    if (!ALLOWED_YEARS.has(year)) {
+      return { error: 'year must be between 1 and 5' }
+    }
+
+    const moduleRaw = (body.module ?? 'Module 1').trim()
+    const moduleName = ALLOWED_MODULES.find(
+      (value) => value.toLowerCase() === moduleRaw.toLowerCase(),
+    )
+    if (!moduleName) {
+      return { error: 'module must be Module 1-5' }
+    }
+
     return this.attendanceService.addClass({
       name: body.name,
       courseId: body.courseId,
-      year: body.year,
-      module: body.module,
+      year,
+      module: moduleName,
     })
   }
 
@@ -41,7 +57,7 @@ export class AttendanceController {
     return this.attendanceService.deleteClass({ classId: Number(classId) })
   }
 
-  @Get('attendance')
+  @Get()
   async getAttendance(
     @Query('classId') classId?: string,
     @Query('month') month?: string,
@@ -54,8 +70,8 @@ export class AttendanceController {
   async addStudent(
     @Body() body: { studentCode?: string; fullName?: string; classId?: number },
   ) {
-    if (!body?.studentCode || !body?.fullName) {
-      return { error: 'studentCode and fullName are required' }
+    if (!body?.studentCode || !body?.fullName || !body?.classId) {
+      return { error: 'studentCode, fullName, and classId are required' }
     }
 
     return this.attendanceService.addStudent({
@@ -93,7 +109,7 @@ export class AttendanceController {
     })
   }
 
-  @Put('attendance')
+  @Put()
   async updateAttendance(
     @Body()
     body: {

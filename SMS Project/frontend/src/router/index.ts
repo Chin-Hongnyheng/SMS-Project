@@ -85,6 +85,11 @@ const router = createRouter({
       component: () => import("../views/AttendanceView.vue"),
     },
     {
+      path: '/attendance/check-in',
+      name: 'attendance-check-in',
+      component: () => import('../views/AttendanceCheckInView.vue'),
+    },
+    {
       path: "/transcript",
       name: "transcript",
       meta: { requiresAuth: true, roles: ["Student", "Teacher", "Admin"] },
