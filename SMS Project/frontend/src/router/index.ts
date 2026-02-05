@@ -105,19 +105,25 @@ const router = createRouter({
       meta: { requiresAuth: true, roles: ['Student', 'Teacher', 'Admin'] },
       component: () => import('../views/AccountView.vue'),
     },
+    {
+      path: '/AhHengKeBanh',
+      name: 'AhHengKeBanh',
+      meta: { requiresAuth: true, roles: ['Student', 'Teacher', 'Admin'] },
+      component: () => import('../views/AccountView.vue'),
+    },
   ],
 })
 router.beforeEach((to, from, next) => {
   const token = sessionStorage.getItem('token')
   const roles: string[] = JSON.parse(sessionStorage.getItem('roles') || '[]')
-  const normalizedRoles = roles.map(r => r.toLowerCase())
+  const normalizedRoles = roles.map((r) => r.toLowerCase())
 
   if (to.meta.requiresAuth) {
     if (!token) return next('/login')
 
     if (to.meta.roles) {
-      const allowedRoles = (to.meta.roles as string[]).map(r => r.toLowerCase())
-      const hasAccess = normalizedRoles.some(r => allowedRoles.includes(r))
+      const allowedRoles = (to.meta.roles as string[]).map((r) => r.toLowerCase())
+      const hasAccess = normalizedRoles.some((r) => allowedRoles.includes(r))
       if (!hasAccess) return next('/login')
     }
   }
