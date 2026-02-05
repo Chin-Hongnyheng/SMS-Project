@@ -72,24 +72,6 @@ export class AttendanceRecord {
   present: boolean
 }
 
-@Entity({ name: 'users' })
-export class Users {
-  @PrimaryGeneratedColumn()
-  id: number
-
-  @Column({ type: 'text', name: 'user_name' })
-  userName: string
-
-  @Column({ type: 'text' })
-  email: string
-
-  @Column({ type: 'text' })
-  password: string
-
-  @Column({ type: 'text', default: 'user' })
-  role: string
-}
-
 @Entity({ name: 'curriculum_subjects' })
 export class CurriculumSubject {
   @PrimaryGeneratedColumn()
