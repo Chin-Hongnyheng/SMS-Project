@@ -20,25 +20,25 @@ const router = createRouter({
     {
       path: '/dashboard',
       name: 'dashboard',
-      meta: { requiresAuth: true, roles: ['user', 'teacher', 'admin'] },
+      meta: { requiresAuth: true, roles: ['Student', 'Teacher', 'Admin'] },
       component: () => import('../views/DashboardView.vue'),
     },
     {
       path: '/admission',
       name: 'admission',
-      meta: { requiresAuth: true, roles: ['teacher', 'admin'] },
+      meta: { requiresAuth: true, roles: ['Teacher', 'Admin'] },
       component: () => import('../views/AdmissionView.vue'),
     },
     {
       path: '/student',
       name: 'student',
-      meta: { requiresAuth: true, roles: ['teacher', 'admin'] },
+      meta: { requiresAuth: true, roles: ['Teacher', 'Admin'] },
       component: () => import('../views/StudentView.vue'),
     },
     {
       path: '/academic',
       name: 'academic',
-      meta: { requiresAuth: true, roles: ['user', 'teacher', 'admin'] },
+      meta: { requiresAuth: true, roles: ['Student', 'Teacher', 'Admin'] },
       component: () => import('../views/AcademicView.vue'),
     },
     {
@@ -54,55 +54,55 @@ const router = createRouter({
     {
       path: '/examination',
       name: 'examination',
-      meta: { requiresAuth: true, roles: ['teacher', 'admin'] },
+      meta: { requiresAuth: true, roles: ['Teacher', 'Admin'] },
       component: () => import('../views/ExaminationView.vue'),
     },
     {
       path: '/exam-types',
       name: 'exam-types',
-      meta: { requiresAuth: true, roles: ['teacher', 'admin'] },
+      meta: { requiresAuth: true, roles: ['Teacher', 'Admin'] },
       component: () => import('../views/ExamTypeView.vue'),
     },
     {
       path: '/exam-schedules',
       name: 'exam-schedules',
-      meta: { requiresAuth: true, roles: ['teacher', 'admin'] },
+      meta: { requiresAuth: true, roles: ['Teacher', 'Admin'] },
       component: () => import('../views/ExamScheduleView.vue'),
     },
     {
       path: '/exam-results',
       name: 'exam-results',
-      meta: { requiresAuth: true, roles: ['teacher', 'admin'] },
+      meta: { requiresAuth: true, roles: ['Teacher', 'Admin'] },
       component: () => import('../views/ExamResultView.vue'),
     },
     {
       path: '/attendance',
       name: 'attendance',
-      meta: { requiresAuth: true, roles: ['teacher', 'admin'] },
+      meta: { requiresAuth: true, roles: ['Teacher', 'Admin'] },
       component: () => import('../views/AttendanceView.vue'),
     },
     {
       path: '/transcript',
       name: 'transcript',
-      meta: { requiresAuth: true, roles: ['user', 'teacher', 'admin'] },
+      meta: { requiresAuth: true, roles: ['Student', 'Teacher', 'Admin'] },
       component: () => import('../views/TranscriptView.vue'),
     },
     {
       path: '/registration',
       name: 'registration',
-      meta: { requiresAuth: true, roles: ['user'] },
+      meta: { requiresAuth: true, roles: ['Student'] },
       component: () => import('../views/RegistrationView.vue'),
     },
     {
       path: '/report',
       name: 'report',
-      meta: { requiresAuth: true, roles: ['teacher', 'admin', 'user'] },
+      meta: { requiresAuth: true, roles: ['Teacher', 'Admin', 'Student'] },
       component: () => import('../views/ReportView.vue'),
     },
     {
       path: '/account',
       name: 'account',
-      meta: { requiresAuth: true, roles: ['user', 'teacher', 'admin'] },
+      meta: { requiresAuth: true, roles: ['Student', 'Teacher', 'Admin'] },
       component: () => import('../views/AccountView.vue'),
     },
   ],
@@ -110,15 +110,14 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const token = sessionStorage.getItem('token')
   const roles: string[] = JSON.parse(sessionStorage.getItem('roles') || '[]')
+  const normalizedRoles = roles.map(r => r.toLowerCase())
 
   if (to.meta.requiresAuth) {
-    // No token → force login
     if (!token) return next('/login')
 
-    // Check role access
     if (to.meta.roles) {
-      const allowedRoles = (to.meta.roles as string[]).map((r) => r.toLowerCase())
-      const hasAccess = roles.some((r) => allowedRoles.includes(r))
+      const allowedRoles = (to.meta.roles as string[]).map(r => r.toLowerCase())
+      const hasAccess = normalizedRoles.some(r => allowedRoles.includes(r))
       if (!hasAccess) return next('/login')
     }
   }

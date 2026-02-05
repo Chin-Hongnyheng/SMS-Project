@@ -3,12 +3,17 @@ import { AuthService } from "./auth.service";
 import { RegisterDto } from "./dto/register.dto";
 import { LoginDto } from "./dto/login.dto";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
+import { UsePipes } from '@nestjs/common';
+import { VerifyUserPipe } from '../common/pipes/user-verification.pipe'
+
 
 @Controller("auth")
 export class AuthController {
-  constructor(private readonly auth: AuthService) {}
+  constructor(private readonly auth: AuthService,
+  ) {}
 
-  @Post("register")
+  @Post('register')
+  @UsePipes(VerifyUserPipe)
   register(@Body() dto: RegisterDto) {
     return this.auth.register(dto);
   }

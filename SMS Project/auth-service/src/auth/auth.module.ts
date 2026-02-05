@@ -12,6 +12,11 @@ import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { RolesGuard } from './guards/roles.guard';
 import { PermissionsGuard } from './guards/permissions.guard';
+import { VerifyUserPipe } from 'src/common/pipes/user-verification.pipe';
+import { UsernamePipe } from 'src/common/pipes/username.pipe';
+import { EmailPipe } from 'src/common/pipes/email.pipe';
+import { PasswordPipe } from 'src/common/pipes/password.pipe';
+import { UserBlock } from 'src/common/pipes/UserBlock.pipe';
 
 @Module({
   imports:[
@@ -19,7 +24,11 @@ import { PermissionsGuard } from './guards/permissions.guard';
     JwtModule.register({}),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, RolesGuard, PermissionsGuard],
+  providers: [AuthService, JwtStrategy, RolesGuard, PermissionsGuard, VerifyUserPipe,
+    UsernamePipe,
+    EmailPipe,
+    PasswordPipe,
+    UserBlock,],
   exports: [AuthService],
 })
 export class AuthModule {}

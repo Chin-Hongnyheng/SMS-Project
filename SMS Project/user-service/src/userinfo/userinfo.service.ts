@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserInfo } from './entities/userinfo.entity';
 import { CreateUserInfoDto } from './dto/create-userinfo.dto';
+import { ConflictException } from '@nestjs/common';
 
 @Injectable()
 export class UserInfoService {
@@ -11,10 +12,18 @@ export class UserInfoService {
     private readonly userInfoRepository: Repository<UserInfo>,
   ) {}
 
-  async create(createUserInfoDto: CreateUserInfoDto): Promise<UserInfo> {
-    const userInfo = this.userInfoRepository.create(createUserInfoDto);
-    return await this.userInfoRepository.save(userInfo);
+  async create(dto: CreateUserInfoDto): Promise<UserInfo> {
+  const existing = await this.userInfoRepository.findOne({
+    where: { userId: dto.userId },
+  });
+
+  if (existing) {
+    throw new ConflictException('User has already registered');
   }
+
+  const userInfo = this.userInfoRepository.create(dto);
+  return this.userInfoRepository.save(userInfo);
+}
 
   async findAll(): Promise<UserInfo[]> {
     return await this.userInfoRepository.find();

@@ -2,7 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn } f
 import { UserRole } from "./user-role.entity";
 import { RefreshToken } from "./refresh-token.entity";
 
-@Entity("student")
+@Entity("users")
 export class User {
   @PrimaryGeneratedColumn()
   id: number;

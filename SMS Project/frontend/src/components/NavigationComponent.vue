@@ -75,24 +75,29 @@ const isNavActive = (path: string) => {
 
 
 const navItems = [
-  { path: '/dashboard', title: 'Dashboard', icon: fas.house, roles: ['admin', 'teacher', 'user'] },
-  { path: '/admission', title: 'Admission', icon: fas.admissions, roles: ['admin', 'teacher'] },
-  { path: '/student', title: 'Student', icon: fas.student, roles: ['admin', 'teacher'] },
-  { path: '/academic', title: 'Academic', icon: fas.academic, roles: ['admin', 'teacher', 'user'] },
-  { path: '/examination', title: 'Examination', icon: fas.examination, roles: ['admin', 'teacher'] },
-  { path: '/attendance', title: 'Attendance', icon: fas.attendance, roles: ['admin', 'teacher'] },
-  { path: '/transcript', title: 'Transcript', icon: fas.transcript, roles: ['admin', 'teacher', 'user'] },
-  { path: '/registration', title: 'Registration', icon: fas.registration, roles: ['user'] },
-  { path: '/report', title: 'Report', icon: fas.report, roles: ['admin', 'teacher'] },
-  { path: '/account', title: 'Account', icon: fas.account, roles: ['admin', 'teacher', 'user'] },
+  { path: '/dashboard', title: 'Dashboard', icon: fas.house, roles: ['Admin', 'Teacher', 'Student'] },
+  { path: '/admission', title: 'Admission', icon: fas.admissions, roles: ['Admin', 'Teacher'] },
+  { path: '/student', title: 'Student', icon: fas.student, roles: ['Admin', 'Teacher'] },
+  { path: '/academic', title: 'Academic', icon: fas.academic, roles: ['Admin', 'Teacher', 'Student'] },
+  { path: '/examination', title: 'Examination', icon: fas.examination, roles: ['Admin', 'Teacher'] },
+  { path: '/attendance', title: 'Attendance', icon: fas.attendance, roles: ['Admin', 'Teacher'] },
+  { path: '/transcript', title: 'Transcript', icon: fas.transcript, roles: ['Admin', 'Teacher', 'Student'] },
+  { path: '/registration', title: 'Registration', icon: fas.registration, roles: ['Student'] },
+  { path: '/report', title: 'Report', icon: fas.report, roles: ['Admin', 'Teacher'] },
+  { path: '/account', title: 'Account', icon: fas.account, roles: ['Admin', 'Teacher', 'Student'] },
 ]
 
 // Get user roles from sessionStorage
-const userRoles: string[] = JSON.parse(sessionStorage.getItem('roles') || '[]')
+const rawUserRoles: string[] = JSON.parse(sessionStorage.getItem('roles') || '[]')
 
-// Filter nav items based on role
+// Normalize user roles (case-insensitive)
+const userRoles = rawUserRoles.map(role => role.toLowerCase())
+
+// Filter nav items based on role (case-insensitive)
 const filteredNavItems = computed(() =>
-  navItems.filter(item => item.roles.some(role => userRoles.includes(role)))
+  navItems.filter(item =>
+    item.roles.some(role => userRoles.includes(role.toLowerCase()))
+  )
 )
 
 // Logout function

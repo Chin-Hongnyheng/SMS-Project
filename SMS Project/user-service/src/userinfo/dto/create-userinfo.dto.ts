@@ -43,6 +43,9 @@ export class CreateUserInfoDto {
   // Date of Birth
   @IsString() @IsNotEmpty() dob: string;
 
+  //Phone Number
+  @IsNotEmpty() phoneNumber: number;
+
   // Email
   @IsEmail() @IsNotEmpty() email: string;
 

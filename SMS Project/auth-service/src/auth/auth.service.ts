@@ -24,20 +24,35 @@ export class AuthService {
     @InjectRepository(RefreshToken) private readonly refreshTokens: Repository<RefreshToken>,
   ) {}
 
+    private blockedNames = [
+    'admin',
+    'root',
+    'system',
+    'superadmin',
+    'support',
+    'null',
+    'defined',
+    'undefined',
+    'teacher',
+    'student',
+  ];
+
+  isBlockedName(name: string): boolean {
+    return this.blockedNames.includes(name.toLowerCase());
+  }
+
+  async findByEmail(email: string): Promise<boolean> {
+  const user = await this.users.findOne({ where: { email } });
+  return !!user;
+}
+
+  async findByUsername(username: string): Promise<boolean> {
+    const user = await this.users.findOne({ where: { username } });
+    return !!user;
+  }
   // --- REGISTER ---
   async register(dto: RegisterDto) {
     const { username, email, password, confirmPassword, role } = dto;
-
-    if (password !== confirmPassword) {
-        throw new BadRequestException('Passwords do not match');
-    }
-
-    // Check if user exists
-    const existingUser = await this.users.findOne({ where: [{ email }, { username }] });
-    if (existingUser) {
-        throw new BadRequestException('Email or username already exists');
-    }
-
     const passwordHash = await bcrypt.hash(password, 10);
 
     // Create the user
@@ -125,4 +140,5 @@ export class AuthService {
 
     return { accessToken, refreshToken };
   }
+
 }

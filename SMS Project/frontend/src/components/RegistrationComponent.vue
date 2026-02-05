@@ -118,7 +118,7 @@
           />
         </div>
 
-        <!-- DOB & Email -->
+        <!-- DOB & Phone Number -->
         <div class="inner-content">
           <span class="header-title-english">Date of Birth <span class="required">*</span></span>
           <input
@@ -131,14 +131,13 @@
             ref="dobInput"
           />
 
-          <span class="header-title-english">Email <span class="required">*</span></span>
+          <span class="header-title-english">Phone Number <span class="required">*</span></span>
           <input
             type="text"
-            v-model="form.email"
-            placeholder="student@gmail.com"
+            v-model="form.phoneNumber"
             class="filling-name"
-            :class="{ 'invalid-field': invalidFields.email }"
-            :style="{ width: props.isCollapsed ? '690px' : '587px' }"
+            :class="{ 'invalid-field': invalidFields.phoneNumberr }"
+            :style="{ width: props.isCollapsed ? '690px' : '497px' }"
           />
         </div>
 
@@ -233,7 +232,7 @@ const form = ref({
   race: '',
   nationality: '',
   dob: '',
-  email: '',
+  phoneNumber: '',
   village: '',
   commune: '',
   district: '',
@@ -244,7 +243,7 @@ const form = ref({
 // Track which fields are invalid
 const invalidFields = ref<Record<string, boolean>>({})
 
-// Track if user has tried to submit (for UX)
+// Track if  has tried to submit (for UX)
 const submitted = ref(false)
 
 // Watch form changes and emit to parent
@@ -290,7 +289,7 @@ const validateForm = () => {
     'race',
     'nationality',
     'dob',
-    'email',
+    'phoneNumber',
     'village',
     'commune',
     'district',

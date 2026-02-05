@@ -25,6 +25,7 @@ const fas = {
       <font-awesome-icon :icon="fas.message" class="each-icon" />
       <font-awesome-icon :icon="fas.account" class="each-icon"/>
     </div>
+
   </header>
 </template>
 
@@ -36,6 +37,7 @@ const fas = {
   align-items: center;
   /* padding: 0 30px; */
   gap: 100px;
+  width:100%;
   position: relative;
 }
 

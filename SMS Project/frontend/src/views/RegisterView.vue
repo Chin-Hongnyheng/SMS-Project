@@ -26,6 +26,7 @@
                 <img src="@/assets/logortc.png" alt="RTC Logo" class="logo-img" />
                 <span class="greeting-style-text">Greeting Fellow Student!</span>
                 <span class="account-style-text">Join us for better future at RTC</span>
+                <button class="login-button-style" @click="goToLogin">Login</button>
             </div>
         </div>
 
@@ -81,6 +82,10 @@ const modal = ref<{
   type: 'success',
   message: '',
 })
+
+const goToLogin = () => {
+  router.push('/login')
+}
 
 const handleRegister = async () => {
   // validation
@@ -155,6 +160,26 @@ html, body {
   justify-content: center;
   align-items: center;
   z-index: 1000;
+}
+
+.login-button-style{
+    font-family: 'Nunito';
+    font-size: 1.2vw;
+    color: white;
+    font-weight: bold;
+    background-color: #5ba4d5;
+    border: 2px solid white;
+    border-radius: 1vw;
+    width: 50%;
+    max-width: 226px; 
+    height: 66px;  
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.login-button-style:hover{
+    color: #5ba4d5;
+    border-color: #5ba4d5;
+    background-color: white;
 }
 
 .modal-box {
