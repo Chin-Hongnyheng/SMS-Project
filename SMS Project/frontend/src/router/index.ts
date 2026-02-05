@@ -135,12 +135,6 @@ const router = createRouter({
       meta: { requiresAuth: true, roles: ['Student', 'Teacher', 'Admin'] },
       component: () => import('../views/AccountView.vue'),
     },
-    {
-      path: '/AhHengKeBanh',
-      name: 'AhHengKeBanh',
-      meta: { requiresAuth: true, roles: ['Student', 'Teacher', 'Admin'] },
-      component: () => import('../views/AccountView.vue'),
-    },
   ],
 })
 
