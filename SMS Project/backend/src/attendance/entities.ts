@@ -34,7 +34,7 @@ export class ClassEntity {
   students: Student[]
 }
 
-@Entity({ name: 'students' })
+@Entity({ name: 'attendance_students' })
 export class Student {
   @PrimaryGeneratedColumn()
   id: number
