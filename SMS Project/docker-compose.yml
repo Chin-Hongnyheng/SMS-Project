@@ -18,7 +18,7 @@ services:
       - ./backend:/app
       - /app/node_modules
     command: npm run start:dev
-  
+
   frontend:
     build: ./frontend
     container_name: SMS-frontend
@@ -29,7 +29,7 @@ services:
     depends_on:
       - backend
     volumes:
-      - ./frontend:/app       
+      - ./frontend:/app
       - /app/node_modules
     command: npm run dev
 
@@ -47,32 +47,32 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
   auth-service:
-      build: ./auth-service
-      container_name: sms-auth-service
-      command: npm run start:dev
-      ports:
-        - "3001:3000"
-      volumes:
-        - ./auth-service:/app
-        - /app/node_modules
-      depends_on:
-        - postgres
-      env_file:
-        - ./auth-service/.env
+    build: ./auth-service
+    container_name: sms-auth-service
+    command: npm run start:dev
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./auth-service:/app
+      - /app/node_modules
+    depends_on:
+      - postgres
+    env_file:
+      - ./auth-service/.env
 
   user-service:
-      build: ./user-service
-      container_name: sms-user-service
-      command: npm run start:dev
-      ports:
-        - "3002:3000"
-      volumes:
-        - ./user-service:/app
-        - /app/node_modules
-      depends_on:
-        - postgres
-      env_file:
-        - ./user-service/.env
+    build: ./user-service
+    container_name: sms-user-service
+    command: npm run start:dev
+    ports:
+      - "3002:3000"
+    volumes:
+      - ./user-service:/app
+      - /app/node_modules
+    depends_on:
+      - postgres
+    env_file:
+      - ./user-service/.env
 volumes:
   pgdata:
 
