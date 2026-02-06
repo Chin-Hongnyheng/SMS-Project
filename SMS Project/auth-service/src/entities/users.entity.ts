@@ -19,7 +19,7 @@ export class User {
   @Column({ name: 'userName', unique: true })
   username: string;
 
-  @Column()
+  @Column({ nullable: true })
   passwordHash: string;
 
   @Column({ default: true })

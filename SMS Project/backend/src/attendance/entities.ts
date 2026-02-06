@@ -1,103 +1,85 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, Unique } from 'typeorm'
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  Unique,
+} from "typeorm";
 
-@Entity({ name: 'courses' })
+@Entity({ name: "courses" })
 export class CourseEntity {
   @PrimaryGeneratedColumn()
-  id: number
+  id: number;
 
-  @Column({ type: 'text' })
-  name: string
+  @Column({ type: "text" })
+  name: string;
 
   @OneToMany(() => ClassEntity, (klass) => klass.course)
-  classes: ClassEntity[]
+  classes: ClassEntity[];
 }
 
-@Entity({ name: 'classes' })
+@Entity({ name: "classes" })
 export class ClassEntity {
   @PrimaryGeneratedColumn()
-  id: number
+  id: number;
 
-  @Column({ type: 'text' })
-  name: string
+  @Column({ type: "text" })
+  name: string;
 
-  @Column({ type: 'int', default: 1 })
-  year: number
+  @Column({ type: "int", default: 1 })
+  year: number;
 
-  @Column({ type: 'text', name: 'module_name', default: 'Module 1' })
-  module: string
+  @Column({ type: "text", name: "module_name", default: "Module 1" })
+  module: string;
 
-  @ManyToOne(() => CourseEntity, (course) => course.classes, { onDelete: 'CASCADE', nullable: true })
-  @JoinColumn({ name: 'course_id' })
-  course: CourseEntity
+  @ManyToOne(() => CourseEntity, (course) => course.classes, {
+    onDelete: "CASCADE",
+    nullable: true,
+  })
+  @JoinColumn({ name: "course_id" })
+  course: CourseEntity;
 
   @OneToMany(() => Student, (student) => student.classEntity)
-  students: Student[]
+  students: Student[];
 }
 
-@Entity({ name: 'students' })
+@Entity({ name: "students" })
 export class Student {
   @PrimaryGeneratedColumn()
-  id: number
+  id: number;
 
-  @Column({ type: 'text', unique: true, name: 'student_code' })
-  studentCode: string
+  @Column({ type: "text", unique: true, name: "student_code" })
+  studentCode: string;
 
-  @Column({ type: 'text', name: 'full_name' })
-  fullName: string
+  @Column({ type: "text", name: "full_name" })
+  fullName: string;
 
-  @ManyToOne(() => ClassEntity, (klass) => klass.students, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'class_id' })
-  classEntity: ClassEntity
+  @ManyToOne(() => ClassEntity, (klass) => klass.students, {
+    onDelete: "CASCADE",
+  })
+  @JoinColumn({ name: "class_id" })
+  classEntity: ClassEntity;
 }
 
-@Entity({ name: 'attendance' })
-@Unique(['classEntity', 'student', 'attendanceDate'])
-
+@Entity({ name: "attendance" })
+@Unique(["classEntity", "student", "attendanceDate"])
 export class AttendanceRecord {
   @PrimaryGeneratedColumn()
-  id: number
+  id: number;
 
-  @ManyToOne(() => ClassEntity, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'class_id' })
-  classEntity: ClassEntity
+  @ManyToOne(() => ClassEntity, { onDelete: "CASCADE" })
+  @JoinColumn({ name: "class_id" })
+  classEntity: ClassEntity;
 
-  @ManyToOne(() => Student, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'student_id' })
-  student: Student
+  @ManyToOne(() => Student, { onDelete: "CASCADE" })
+  @JoinColumn({ name: "student_id" })
+  student: Student;
 
-  @Column({ type: 'date', name: 'attendance_date' })
-  attendanceDate: Date
+  @Column({ type: "date", name: "attendance_date" })
+  attendanceDate: Date;
 
-  @Column({ type: 'boolean', default: true })
-  present: boolean
-}
-
-@Entity({ name: 'curriculum_subjects' })
-export class CurriculumSubject {
-  @PrimaryGeneratedColumn()
-  id: number
-
-  @Column({ type: 'text' })
-  name: string
-
-  @Column({ type: 'text' })
-  code: string
-
-  @Column({ type: 'int', default: 1 })
-  year: number
-
-  @Column({ type: 'int', default: 1 })
-  semester: number
-
-  @Column({ type: 'int', name: 'lecture_hours', default: 0 })
-  lectureHours: number
-
-  @Column({ type: 'int', name: 'lab_hours', default: 0 })
-  labHours: number
-
-  @Column({ type: 'text', nullable: true })
-  description?: string
-
-  @Column({ type: 'text', name: 'course_name', nullable: true })
-  courseName?: string
+  @Column({ type: "boolean", default: true })
+  present: boolean;
 }
