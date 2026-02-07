@@ -8,7 +8,7 @@ import {
 import { UserRole } from './user-role.entity';
 import { RefreshToken } from './refresh-token.entity';
 
-@Entity('users')
+@Entity('user')
 export class User {
   @PrimaryGeneratedColumn()
   id: number;
@@ -16,7 +16,7 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  @Column({ name: 'userName', unique: true })
+  @Column({unique: true })
   username: string;
 
   @Column()
