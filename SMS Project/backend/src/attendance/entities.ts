@@ -1,5 +1,6 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, Unique } from 'typeorm'
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique } from 'typeorm'
 import { Course } from '../course/entity/course.entity'
+import { Student } from '../dashboard/students/entities/student.entity'
 
 @Entity({ name: 'classes' })
 export class ClassEntity {
@@ -18,25 +19,6 @@ export class ClassEntity {
   @ManyToOne(() => Course, { onDelete: 'CASCADE', nullable: true })
   @JoinColumn({ name: 'course_id' })
   course: Course
-
-  @OneToMany(() => Student, (student) => student.classEntity)
-  students: Student[]
-}
-
-@Entity({ name: 'attendance_students' })
-export class Student {
-  @PrimaryGeneratedColumn()
-  id: number
-
-  @Column({ type: 'text', unique: true, name: 'student_code' })
-  studentCode: string
-
-  @Column({ type: 'text', name: 'full_name' })
-  fullName: string
-
-  @ManyToOne(() => ClassEntity, (klass) => klass.students, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'class_id' })
-  classEntity: ClassEntity
 }
 
 @Entity({ name: 'attendance' })

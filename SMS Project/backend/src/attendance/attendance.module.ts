@@ -4,8 +4,9 @@ import { AttendanceController } from './attendance.controller'
 import { AttendanceService } from './attendance.service'
 import { CurriculumController } from './curriculum.controller'
 import { CurriculumService } from './curriculum.service'
-import { AttendanceRecord, ClassEntity, CurriculumSubject, Student } from './entities'
+import { AttendanceRecord, ClassEntity, CurriculumSubject } from './entities'
 import { Course } from '../course/entity/course.entity'
+import { Student } from '../dashboard/students/entities/student.entity'
 
 @Module({
   imports: [
@@ -15,5 +16,4 @@ import { Course } from '../course/entity/course.entity'
   providers: [AttendanceService, CurriculumService],
 })
 export class AttendanceModule {}
-
 

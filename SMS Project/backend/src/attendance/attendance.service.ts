@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Between, Repository } from 'typeorm'
-import { AttendanceRecord, ClassEntity, Student } from './entities'
+import { Between, FindOptionsWhere, Repository } from 'typeorm'
+import { AttendanceRecord, ClassEntity } from './entities'
 import { Course } from '../course/entity/course.entity'
+import { Student } from '../dashboard/students/entities/student.entity'
 const DEFAULT_COURSE_NAMES = [
   'Bachelor degree in Nursing and Midwifery',
   'Associate degree in Nurse',
@@ -11,6 +12,7 @@ const DEFAULT_COURSE_NAMES = [
   'Continue Primary Nurse to Associate degree',
 ]
 const DEFAULT_COURSE_IMAGE = 'placeholder.png'
+const DEFAULT_STUDENT_TEXT = 'N/A'
 const ALLOWED_YEARS = new Set([1, 2, 3, 4, 5])
 const ALLOWED_MODULES = ['Module 1', 'Module 2', 'Module 3', 'Module 4', 'Module 5']
 
@@ -22,6 +24,23 @@ export class AttendanceService {
     @InjectRepository(Student) private readonly studentRepo: Repository<Student>,
     @InjectRepository(AttendanceRecord) private readonly attendanceRepo: Repository<AttendanceRecord>,
   ) {}
+
+  private buildStudentDefaults(classEntity: ClassEntity | null) {
+    const className = classEntity?.name ?? 'Unknown Class'
+    const courseName = classEntity?.course?.courseName ?? 'Unknown Course'
+    const yearValue = classEntity?.year ?? 1
+
+    return {
+      class: className,
+      major: courseName,
+      group: className,
+      year: yearValue,
+      generation: String(yearValue),
+      location: DEFAULT_STUDENT_TEXT,
+      contact: DEFAULT_STUDENT_TEXT,
+      exam: DEFAULT_STUDENT_TEXT,
+    }
+  }
 
   async ensureDefaultCourses(): Promise<Course[]> {
     const existingCourses = await this.courseRepo.find({ order: { id: 'ASC' } })
@@ -233,7 +252,10 @@ export class AttendanceService {
     let classEntity: ClassEntity | null = null
 
     if (classId) {
-      classEntity = await this.classRepo.findOne({ where: { id: classId } })
+      classEntity = await this.classRepo.findOne({
+        where: { id: classId },
+        relations: { course: true },
+      })
     }
 
     const { start, end } = this.getMonthRange(month)
@@ -244,8 +266,14 @@ export class AttendanceService {
       return { days, students: [] }
     }
 
+    const where: FindOptionsWhere<Student> = {
+      class: classEntity.name,
+    }
+    if (classEntity.course?.courseName) {
+      where.major = classEntity.course.courseName
+    }
     const classStudents = await this.studentRepo.find({
-      where: { classEntity: { id: classEntity.id } },
+      where,
       order: { id: 'ASC' },
     })
 
@@ -271,8 +299,8 @@ export class AttendanceService {
     }
 
     const students = classStudents.map((student) => ({
-      id: student.studentCode,
-      name: student.fullName,
+      id: student.studentId,
+      name: student.name,
       presentDays: attendanceMap.get(student.id) ?? [],
     }))
 
@@ -283,35 +311,45 @@ export class AttendanceService {
     let classEntity: ClassEntity | null = null
 
     if (payload.classId) {
-      classEntity = await this.classRepo.findOne({ where: { id: payload.classId } })
+      classEntity = await this.classRepo.findOne({
+        where: { id: payload.classId },
+        relations: { course: true },
+      })
     }
 
     if (!classEntity) {
       throw new Error('Class not found')
     }
 
-    let student = await this.studentRepo.findOne({ where: { studentCode: payload.studentCode } })
+    const defaults = this.buildStudentDefaults(classEntity)
+    let student = await this.studentRepo.findOne({ where: { studentId: payload.studentCode } })
     if (!student) {
       student = this.studentRepo.create({
-        studentCode: payload.studentCode,
-        fullName: payload.fullName,
-        classEntity,
+        studentId: payload.studentCode,
+        name: payload.fullName,
+        ...defaults,
       })
       student = await this.studentRepo.save(student)
       return {
-        id: student.studentCode,
-        name: student.fullName,
+        id: student.studentId,
+        name: student.name,
       }
     }
 
-    if (!student.classEntity || student.classEntity.id !== classEntity.id) {
-      student.classEntity = classEntity
-      student = await this.studentRepo.save(student)
-    }
+    student.name = payload.fullName
+    student.class = defaults.class
+    student.major = defaults.major
+    student.group = defaults.group
+    student.year = defaults.year
+    student.generation = defaults.generation
+    student.location = defaults.location
+    student.contact = defaults.contact
+    student.exam = defaults.exam
+    student = await this.studentRepo.save(student)
 
     return {
-      id: student.studentCode,
-      name: student.fullName,
+      id: student.studentId,
+      name: student.name,
     }
   }
 
@@ -321,54 +359,67 @@ export class AttendanceService {
     newStudentCode?: string
     classId?: number
   }) {
-    let student = await this.studentRepo.findOne({ where: { studentCode: payload.studentCode } })
+    let student = await this.studentRepo.findOne({ where: { studentId: payload.studentCode } })
     if (!student) {
       throw new Error('Student not found')
     }
 
-    const nextCode = payload.newStudentCode?.trim() || student.studentCode
-    if (nextCode !== student.studentCode) {
-      const existing = await this.studentRepo.findOne({ where: { studentCode: nextCode } })
+    const nextCode = payload.newStudentCode?.trim() || student.studentId
+    if (nextCode !== student.studentId) {
+      const existing = await this.studentRepo.findOne({ where: { studentId: nextCode } })
       if (existing && existing.id !== student.id) {
         throw new Error('Student code already exists')
       }
-      student.studentCode = nextCode
+      student.studentId = nextCode
     }
 
     if (payload.fullName) {
-      student.fullName = payload.fullName.trim()
+      student.name = payload.fullName.trim()
     }
 
     if (payload.classId) {
-      const classEntity = await this.classRepo.findOne({ where: { id: payload.classId } })
+      const classEntity = await this.classRepo.findOne({
+        where: { id: payload.classId },
+        relations: { course: true },
+      })
       if (!classEntity) {
         throw new Error('Class not found')
       }
-      student.classEntity = classEntity
+      const defaults = this.buildStudentDefaults(classEntity)
+      student.class = defaults.class
+      student.major = defaults.major
+      student.group = defaults.group
+      student.year = defaults.year
+      student.generation = defaults.generation
+      student.location = defaults.location
+      student.contact = defaults.contact
+      student.exam = defaults.exam
     }
 
     student = await this.studentRepo.save(student)
     return {
-      id: student.studentCode,
-      name: student.fullName,
+      id: student.studentId,
+      name: student.name,
     }
   }
 
   async removeStudentFromClass(payload: { classId: number; studentCode: string }) {
-    const classEntity = await this.classRepo.findOne({ where: { id: payload.classId } })
+    const classEntity = await this.classRepo.findOne({
+      where: { id: payload.classId },
+      relations: { course: true },
+    })
     if (!classEntity) {
       throw new Error('Class not found')
     }
 
     const student = await this.studentRepo.findOne({
-      where: { studentCode: payload.studentCode },
-      relations: { classEntity: true },
+      where: { studentId: payload.studentCode },
     })
     if (!student) {
       return { removed: false }
     }
 
-    if (!student.classEntity || student.classEntity.id !== classEntity.id) {
+    if (student.class !== classEntity.name) {
       return { removed: false }
     }
 
@@ -387,7 +438,7 @@ export class AttendanceService {
       throw new Error('Class not found')
     }
 
-    const student = await this.studentRepo.findOne({ where: { studentCode: payload.studentCode } })
+    const student = await this.studentRepo.findOne({ where: { studentId: payload.studentCode } })
     if (!student) {
       throw new Error('Student not found')
     }
