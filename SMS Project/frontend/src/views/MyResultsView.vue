@@ -38,17 +38,20 @@
               result.remarks === 'PASS' ? 'status-pass' : 'status-fail',
             ]"
           >
-            {{ result.remarks }}
+            {{ result.remarks || "PENDING" }}
           </span>
         </div>
 
         <div class="result-card-body">
           <div class="score-display">
-            <span class="score-value">{{ result.score }}%</span>
+            <span class="score-value">{{ result.score ?? 0 }}%</span>
             <span
-              :class="['grade-badge', 'grade-' + result.grade.toLowerCase()]"
+              :class="[
+                'grade-badge',
+                'grade-' + (result.grade || 'f').toLowerCase(),
+              ]"
             >
-              Grade: {{ result.grade }}
+              Grade: {{ result.grade || "N/A" }}
             </span>
           </div>
 
@@ -138,7 +141,7 @@ const failedCount = computed(
 
 const averageScore = computed(() => {
   if (results.value.length === 0) return 0;
-  const total = results.value.reduce((sum, r) => sum + Number(r.score), 0);
+  const total = results.value.reduce((sum, r) => sum + Number(r.score || 0), 0);
   return total / results.value.length;
 });
 
@@ -169,7 +172,7 @@ async function fetchMyResults() {
   }
 }
 
-function formatDate(dateString: string): string {
+function formatDate(dateString?: string): string {
   if (!dateString) return "N/A";
   return new Date(dateString).toLocaleDateString("en-US", {
     year: "numeric",
