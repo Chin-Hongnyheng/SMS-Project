@@ -178,9 +178,9 @@ interface ExamType {
   name: string
   description: string
   status: 'ACTIVE' | 'INACTIVE'
-  createdAt?: Date
-  courseId: number
-  subjectId: number
+  createdAt?: string | Date
+  courseId: number | null
+  subjectId: number | null
 }
 
 interface CourseOption {
@@ -285,12 +285,17 @@ watch(
 async function fetchExamTypes() {
   loading.value = true
   try {
-      const response = await examTypesService.getAll(0, 100)
-      examTypes.value = response.data.map((e: any) => ({
-        ...e,
-        courseId: e.courseId != null ? Number(e.courseId) : null,  
-        subjectId: e.subjectId != null ? Number(e.subjectId) : null,
-  }))
+    const response = await examTypesService.getAll(0, 100)
+
+    examTypes.value = response.data.map((e: any) => ({
+      id: e.id,
+      name: e.name,
+      description: e.description,
+      status: e.status,
+      createdAt: e.createdAt,
+      courseId: e.course_id != null ? Number(e.course_id) : null,   // ← use backend field
+      subjectId: e.subject_id != null ? Number(e.subject_id) : null, // ← use backend field
+    }))
 
   } catch (error: any) {
     errorMessage.value = error.response?.data?.message || 'Failed to load exam types'
@@ -298,6 +303,7 @@ async function fetchExamTypes() {
     loading.value = false
   }
 }
+
 
 function openModal() {
   isEditing.value = false
