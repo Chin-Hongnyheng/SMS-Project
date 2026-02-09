@@ -1,179 +1,182 @@
 <template>
   <section class="dashboard-container">
-    <header class="dashboard-header">
-      <h1>Exam Management Dashboard 📚</h1>
-      <p>Manage exam types, schedules, and results from one central location.</p>
-    </header>
-
-    <!-- Loading State -->
-    <div v-if="loading" class="loading-state">
-      <p>Loading exam data...</p>
-    </div>
-
-    <!-- Stats Grid -->
-    <div v-else class="stats-grid">
-      <div class="card stat-card" @click="navigateTo('exam-types')">
-        <p class="stat-label">Exam Types</p>
-        <p class="stat-value">{{ stats.totalExamTypes }}</p>
-        <p class="stat-detail">{{ stats.activeExamTypes }} active</p>
-        <div class="progress-bar">
-          <div
-            class="progress-fill"
-            :style="{ width: getPercentage(stats.activeExamTypes, stats.totalExamTypes) + '%' }"
-          ></div>
-        </div>
+    <!-- ✅ Role Check Wrapper -->
+    <div v-if="userRole === 'admin' || userRole === 'teacher'">
+      <!-- Loading State -->
+      <div v-if="loading" class="loading-state">
+        <p>Loading exam data...</p>
       </div>
 
-      <div class="card stat-card" @click="navigateTo('exam-schedules')">
-        <p class="stat-label">Exam Schedules</p>
-        <p class="stat-value">{{ stats.totalSchedules }}</p>
-        <p class="stat-detail">{{ stats.scheduledExams }} scheduled</p>
-        <div class="progress-bar">
-          <div
-            class="progress-fill progress-blue"
-            :style="{ width: getPercentage(stats.scheduledExams, stats.totalSchedules) + '%' }"
-          ></div>
-        </div>
-      </div>
-
-      <div class="card stat-card" @click="navigateTo('exam-results')">
-        <p class="stat-label">Exam Results</p>
-        <p class="stat-value">{{ stats.totalResults }}</p>
-        <p class="stat-detail">{{ stats.passedResults }} passed</p>
-        <div class="progress-bar">
-          <div
-            class="progress-fill progress-green"
-            :style="{ width: getPercentage(stats.passedResults, stats.totalResults) + '%' }"
-          ></div>
-        </div>
-      </div>
-
-      <div class="card stat-card">
-        <p class="stat-label">Average Score</p>
-        <p class="stat-value">{{ stats.averageScore.toFixed(1) }}%</p>
-        <p class="stat-detail">across all exams</p>
-        <div class="progress-bar">
-          <div
-            class="progress-fill progress-purple"
-            :style="{ width: stats.averageScore + '%' }"
-          ></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="main-layout">
-      <!-- Left Column -->
-      <div class="column">
-        <!-- Quick Actions -->
-        <div class="card">
-          <h2 class="card-title">Quick Actions</h2>
-          <div class="button-stack">
-            <button class="btn btn-primary" @click="navigateTo('exam-types')">
-              📋 Manage Exam Types
-            </button>
-            <button class="btn btn-primary" @click="navigateTo('exam-schedules')">
-              📅 Manage Schedules
-            </button>
-            <button class="btn btn-primary" @click="navigateTo('exam-results')">
-              📊 View Results
-            </button>
-            <button class="btn btn-secondary" @click="refreshData">🔄 Refresh Data</button>
+      <!-- Stats Grid -->
+      <div v-else class="stats-grid">
+        <div class="card stat-card" @click="navigateTo('exam-types')">
+          <p class="stat-label">Exam Types</p>
+          <p class="stat-value">{{ stats.totalExamTypes }}</p>
+          <p class="stat-detail">{{ stats.activeExamTypes }} active</p>
+          <div class="progress-bar">
+            <div
+              class="progress-fill"
+              :style="{ width: getPercentage(stats.activeExamTypes, stats.totalExamTypes) + '%' }"
+            ></div>
           </div>
         </div>
 
-        <!-- Recent Exam Schedules -->
-        <div class="card">
-          <div class="card-header-flex">
-            <h2 class="card-title">Recent Schedules</h2>
-            <button class="btn btn-link" @click="navigateTo('exam-schedules')">View All →</button>
+        <div class="card stat-card" @click="navigateTo('exam-schedules')">
+          <p class="stat-label">Exam Schedules</p>
+          <p class="stat-value">{{ stats.totalSchedules }}</p>
+          <p class="stat-detail">{{ stats.scheduledExams }} scheduled</p>
+          <div class="progress-bar">
+            <div
+              class="progress-fill progress-blue"
+              :style="{ width: getPercentage(stats.scheduledExams, stats.totalSchedules) + '%' }"
+            ></div>
           </div>
-          <ul class="list-stack" v-if="recentSchedules.length > 0">
-            <li
-              v-for="schedule in recentSchedules"
-              :key="schedule.id"
-              class="list-item-card"
-              @click="navigateTo('exam-schedules')"
-            >
-              <p class="item-title">{{ schedule.subject }}</p>
-              <p class="item-subtitle">
-                {{ formatDate(schedule.examDate) }} | {{ schedule.startTime }} -
-                {{ schedule.endTime }} |
-                {{ schedule.room }}
-              </p>
-              <span :class="['status-badge', 'status-' + schedule.status.toLowerCase()]">
-                {{ schedule.status }}
-              </span>
-            </li>
-          </ul>
-          <p v-else class="empty-message">No schedules found</p>
+        </div>
+
+        <div class="card stat-card" @click="navigateTo('exam-results')">
+          <p class="stat-label">Exam Results</p>
+          <p class="stat-value">{{ stats.totalResults }}</p>
+          <p class="stat-detail">{{ stats.passedResults }} passed</p>
+          <div class="progress-bar">
+            <div
+              class="progress-fill progress-green"
+              :style="{ width: getPercentage(stats.passedResults, stats.totalResults) + '%' }"
+            ></div>
+          </div>
+        </div>
+
+        <div class="card stat-card">
+          <p class="stat-label">Average Score</p>
+          <p class="stat-value">{{ stats.averageScore.toFixed(1) }}%</p>
+          <p class="stat-detail">across all exams</p>
+          <div class="progress-bar">
+            <div
+              class="progress-fill progress-purple"
+              :style="{ width: stats.averageScore + '%' }"
+            ></div>
+          </div>
         </div>
       </div>
 
-      <!-- Right Column -->
-      <div class="column">
-        <!-- Exam Types Overview -->
-        <div class="card">
-          <div class="card-header-flex">
-            <h2 class="card-title">Exam Types</h2>
-            <button class="btn btn-link" @click="navigateTo('exam-types')">Manage →</button>
+      <div class="main-layout">
+        <!-- Left Column -->
+        <div class="column">
+          <!-- Quick Actions -->
+          <div class="card">
+            <h2 class="card-title">Quick Actions</h2>
+            <div class="button-stack">
+              <button class="btn btn-primary" @click="navigateTo('exam-types')">
+                📋 Manage Exam Types
+              </button>
+              <button class="btn btn-primary" @click="navigateTo('exam-schedules')">
+                📅 Manage Schedules
+              </button>
+              <button class="btn btn-primary" @click="navigateTo('exam-results')">
+                📊 View Results
+              </button>
+              <button class="btn btn-secondary" @click="refreshData">🔄 Refresh Data</button>
+            </div>
           </div>
-          <ul class="list-stack" v-if="examTypes.length > 0">
-            <li
-              v-for="examType in examTypes"
-              :key="examType.id"
-              class="list-item-card flex-between"
-            >
-              <div>
-                <p class="item-title">{{ examType.name }}</p>
-                <p class="item-subtitle">{{ examType.description }}</p>
-              </div>
-              <span
-                :class="[
-                  'status-badge',
-                  examType.status === 'ACTIVE' ? 'status-active' : 'status-inactive',
-                ]"
+
+          <!-- Recent Exam Schedules -->
+          <div class="card">
+            <div class="card-header-flex">
+              <h2 class="card-title">Recent Schedules</h2>
+              <button class="btn btn-link" @click="navigateTo('exam-schedules')">View All →</button>
+            </div>
+            <ul class="list-stack" v-if="recentSchedules.length > 0">
+              <li
+                v-for="schedule in recentSchedules"
+                :key="schedule.id"
+                class="list-item-card"
+                @click="navigateTo('exam-schedules')"
               >
-                {{ examType.status }}
-              </span>
-            </li>
-          </ul>
-          <p v-else class="empty-message">No exam types found</p>
+                <p class="item-title">{{ schedule.subject }}</p>
+                <p class="item-subtitle">
+                  {{ formatDate(schedule.examDate) }} | {{ schedule.startTime }} -
+                  {{ schedule.endTime }} |
+                  {{ schedule.room }}
+                </p>
+                <span :class="['status-badge', 'status-' + schedule.status.toLowerCase()]">
+                  {{ schedule.status }}
+                </span>
+              </li>
+            </ul>
+            <p v-else class="empty-message">No schedules found</p>
+          </div>
         </div>
 
-        <!-- Recent Results -->
-        <div class="card">
-          <div class="card-header-flex">
-            <h2 class="card-title">Recent Results</h2>
-            <button class="btn btn-link" @click="navigateTo('exam-results')">View All →</button>
-          </div>
-          <ul class="list-stack" v-if="recentResults.length > 0">
-            <li
-              v-for="result in recentResults"
-              :key="result.id"
-              class="list-item-card flex-between"
-            >
-              <div>
-                <p class="item-title">Student: {{ result.studentId.slice(0, 8) }}...</p>
-                <p class="item-subtitle">Score: {{ result.score }}%</p>
-              </div>
-              <div class="result-badges">
-                <span :class="['grade-badge', 'grade-' + result.grade.toLowerCase()]">
-                  {{ result.grade }}
-                </span>
+        <!-- Right Column -->
+        <div class="column">
+          <!-- Exam Types Overview -->
+          <div class="card">
+            <div class="card-header-flex">
+              <h2 class="card-title">Exam Types</h2>
+              <button class="btn btn-link" @click="navigateTo('exam-types')">Manage →</button>
+            </div>
+            <ul class="list-stack" v-if="examTypes.length > 0">
+              <li
+                v-for="examType in examTypes"
+                :key="examType.id"
+                class="list-item-card flex-between"
+              >
+                <div>
+                  <p class="item-title">{{ examType.name }}</p>
+                  <p class="item-subtitle">{{ examType.description }}</p>
+                </div>
                 <span
                   :class="[
                     'status-badge',
-                    result.remarks === 'PASS' ? 'status-pass' : 'status-fail',
+                    examType.status === 'ACTIVE' ? 'status-active' : 'status-inactive',
                   ]"
                 >
-                  {{ result.remarks }}
+                  {{ examType.status }}
                 </span>
-              </div>
-            </li>
-          </ul>
-          <p v-else class="empty-message">No results found</p>
+              </li>
+            </ul>
+            <p v-else class="empty-message">No exam types found</p>
+          </div>
+
+          <!-- Recent Results -->
+          <div class="card">
+            <div class="card-header-flex">
+              <h2 class="card-title">Recent Results</h2>
+              <button class="btn btn-link" @click="navigateTo('exam-results')">View All →</button>
+            </div>
+            <ul class="list-stack" v-if="recentResults.length > 0">
+              <li
+                v-for="result in recentResults"
+                :key="result.id"
+                class="list-item-card flex-between"
+              >
+                <div>
+                  <p class="item-title">Student: {{ result.studentId.slice(0, 8) }}...</p>
+                  <p class="item-subtitle">Score: {{ result.score }}%</p>
+                </div>
+                <div class="result-badges">
+                  <span :class="['grade-badge', 'grade-' + result.grade.toLowerCase()]">
+                    {{ result.grade }}
+                  </span>
+                  <span
+                    :class="[
+                      'status-badge',
+                      result.remarks === 'PASS' ? 'status-pass' : 'status-fail',
+                    ]"
+                  >
+                    {{ result.remarks }}
+                  </span>
+                </div>
+              </li>
+            </ul>
+            <p v-else class="empty-message">No results found</p>
+          </div>
         </div>
       </div>
+    </div>
+
+    <!-- ✅ Candidate View Fallback -->
+    <div v-else>
+      <CandidateExamView />
     </div>
 
     <!-- Error Message -->
@@ -188,7 +191,9 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { examTypesService, examSchedulesService, examResultsService } from '@/api/examService'
+import CandidateExamView from './CandidateExamView.vue'
 
+// ------------------ Types ------------------
 interface ExamType {
   id: string
   name: string
@@ -224,9 +229,11 @@ interface Stats {
   averageScore: number
 }
 
+// ------------------ Refs ------------------
 const router = useRouter()
 const loading = ref(true)
 const errorMessage = ref('')
+const userRole = ref<string | null>(null) // ✅ Already exists
 
 const examTypes = ref<ExamType[]>([])
 const recentSchedules = ref<ExamSchedule[]>([])
@@ -242,10 +249,33 @@ const stats = ref<Stats>({
   averageScore: 0,
 })
 
-onMounted(() => {
-  fetchAllData()
-})
+// ------------------ Lifecycle ------------------
+onMounted(async () => {
+  try {
+    const storedRole = localStorage.getItem('role');
+    if (storedRole) {
+      try {
+        const parsed = JSON.parse(storedRole);
+        userRole.value = Array.isArray(parsed) ? parsed[0] : parsed;
+      } catch {
+        userRole.value = storedRole;
+      }
+      // <-- Add this line to normalize the role
+      userRole.value = userRole.value?.toString().trim().toLowerCase() || null;
+    }
 
+    if (userRole.value === 'admin' || userRole.value === 'teacher') {
+      fetchAllData();
+    }
+  } catch (error) {
+    console.error('Failed to get user role', error);
+    errorMessage.value = 'Failed to determine user role';
+  }
+});
+
+
+
+// ------------------ Methods ------------------
 async function fetchAllData() {
   loading.value = true
   errorMessage.value = ''
@@ -278,7 +308,7 @@ async function fetchAllData() {
       (r: ExamResult) => r.remarks === 'PASS',
     ).length
 
-    // Calculate average score
+    // Average score
     if (resultsRes.data.length > 0) {
       const totalScore = resultsRes.data.reduce(
         (sum: number, r: ExamResult) => sum + Number(r.score),
@@ -316,6 +346,7 @@ function getPercentage(value: number, total: number): number {
   return Math.round((value / total) * 100)
 }
 </script>
+
 
 <style scoped>
 /* Variables for easy theming */

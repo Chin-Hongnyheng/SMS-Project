@@ -69,7 +69,7 @@ const router = createRouter({
     {
       path: "/examination",
       name: "examination",
-      meta: { requiresAuth: true, roles: ["Teacher", "Admin"] },
+      meta: { requiresAuth: true, roles: ["Teacher", "Admin", "Student"] },
       component: () => import("../views/ExaminationView.vue"),
     },
     {
@@ -89,12 +89,6 @@ const router = createRouter({
       name: "exam-results",
       meta: { requiresAuth: true, roles: ["Teacher", "Admin"] },
       component: () => import("../views/ExamResultView.vue"),
-    },
-    {
-      path: "/candidate-exams",
-      name: "candidate-exams",
-      meta: { requiresAuth: true, roles: ["Student", "Candidate"] },
-      component: () => import("../views/CandidateExamView.vue"),
     },
     {
       path: "/attendance",
