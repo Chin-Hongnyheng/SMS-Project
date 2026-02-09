@@ -6,7 +6,7 @@ import {
   MinLength,
   IsOptional,
 } from "class-validator";
-import { ExamTypeStatus } from "../entities/exam-type.entity";
+import { ExamTypeStatus, ExamFor } from "../entities/exam-type.entity";
 
 export class CreateExamTypeDto {
   @IsString()
@@ -28,4 +28,10 @@ export class CreateExamTypeDto {
     message: "Status must be either ACTIVE or INACTIVE",
   })
   status: ExamTypeStatus = ExamTypeStatus.ACTIVE;
+
+  @IsEnum(ExamFor, {
+    message: "ExamFor must be either STUDENT or CANDIDATE",
+  })
+  @IsOptional()
+  examFor: ExamFor = ExamFor.STUDENT;
 }

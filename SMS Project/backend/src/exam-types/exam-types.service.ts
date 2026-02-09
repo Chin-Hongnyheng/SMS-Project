@@ -96,6 +96,7 @@ export class ExamTypesService {
     if (updateExamTypeDto.description !== undefined)
       examType.description = updateExamTypeDto.description;
     if (updateExamTypeDto.status) examType.status = updateExamTypeDto.status;
+    if (updateExamTypeDto.examFor) examType.examFor = updateExamTypeDto.examFor;
 
     return await this.examTypeRepository.save(examType);
   }

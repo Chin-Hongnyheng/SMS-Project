@@ -9,12 +9,12 @@ import {
   Query,
   HttpCode,
   HttpStatus,
-} from '@nestjs/common';
-import { ExamSchedulesService } from './exam-schedules.service';
-import { CreateExamScheduleDto } from './dto/create-exam-schedule.dto';
-import { UpdateExamScheduleDto } from './dto/update-exam-schedule.dto';
+} from "@nestjs/common";
+import { ExamSchedulesService } from "./exam-schedules.service";
+import { CreateExamScheduleDto } from "./dto/create-exam-schedule.dto";
+import { UpdateExamScheduleDto } from "./dto/update-exam-schedule.dto";
 
-@Controller('exam-schedules')
+@Controller("exam-schedules")
 export class ExamSchedulesController {
   constructor(private readonly examSchedulesService: ExamSchedulesService) {}
 
@@ -35,10 +35,10 @@ export class ExamSchedulesController {
   @Get()
   @HttpCode(HttpStatus.OK)
   async findAll(
-    @Query('skip') skip?: string,
-    @Query('take') take?: string,
-    @Query('examTypeId') examTypeId?: string,
-    @Query('examDate') examDate?: string,
+    @Query("skip") skip?: string,
+    @Query("take") take?: string,
+    @Query("examTypeId") examTypeId?: string,
+    @Query("examDate") examDate?: string,
   ) {
     return await this.examSchedulesService.findAll(
       skip ? parseInt(skip) : 0,
@@ -49,12 +49,28 @@ export class ExamSchedulesController {
   }
 
   /**
+   * Get exam schedules for candidates (examFor = 'CANDIDATE')
+   * GET /exam-schedules/candidate
+   */
+  @Get("candidate")
+  @HttpCode(HttpStatus.OK)
+  async findCandidateSchedules(
+    @Query("skip") skip?: string,
+    @Query("take") take?: string,
+  ) {
+    return await this.examSchedulesService.findCandidateSchedules(
+      skip ? parseInt(skip) : 0,
+      take ? parseInt(take) : 100,
+    );
+  }
+
+  /**
    * Get a specific exam schedule by ID
    * GET /exam-schedules/:id
    */
-  @Get(':id')
+  @Get(":id")
   @HttpCode(HttpStatus.OK)
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param("id") id: string) {
     return await this.examSchedulesService.findOne(id);
   }
 
@@ -62,10 +78,10 @@ export class ExamSchedulesController {
    * Update an exam schedule
    * PATCH /exam-schedules/:id
    */
-  @Patch(':id')
+  @Patch(":id")
   @HttpCode(HttpStatus.OK)
   async update(
-    @Param('id') id: string,
+    @Param("id") id: string,
     @Body() updateExamScheduleDto: UpdateExamScheduleDto,
   ) {
     return await this.examSchedulesService.update(id, updateExamScheduleDto);
@@ -75,9 +91,9 @@ export class ExamSchedulesController {
    * Delete an exam schedule
    * DELETE /exam-schedules/:id
    */
-  @Delete(':id')
+  @Delete(":id")
   @HttpCode(HttpStatus.OK)
-  async remove(@Param('id') id: string) {
+  async remove(@Param("id") id: string) {
     return await this.examSchedulesService.remove(id);
   }
 
@@ -85,9 +101,9 @@ export class ExamSchedulesController {
    * Change exam schedule status
    * PATCH /exam-schedules/:id/status
    */
-  @Patch(':id/status')
+  @Patch(":id/status")
   @HttpCode(HttpStatus.OK)
-  async changeStatus(@Param('id') id: string, @Body('status') status: string) {
+  async changeStatus(@Param("id") id: string, @Body("status") status: string) {
     return await this.examSchedulesService.changeStatus(id, status);
   }
 }

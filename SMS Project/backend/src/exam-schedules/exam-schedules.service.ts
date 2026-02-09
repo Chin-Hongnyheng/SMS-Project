@@ -80,6 +80,34 @@ export class ExamSchedulesService {
   }
 
   /**
+   * Get exam schedules for candidates (examFor = 'CANDIDATE')
+   */
+  async findCandidateSchedules(
+    skip = 0,
+    take = 100,
+  ): Promise<{ data: ExamSchedule[]; total: number }> {
+    const query = this.examScheduleRepository
+      .createQueryBuilder("schedule")
+      .leftJoinAndSelect("schedule.examType", "examType")
+      .leftJoinAndSelect("schedule.course", "course")
+      .leftJoinAndSelect("schedule.subject", "subject")
+      .where("examType.examFor = :examFor", { examFor: "CANDIDATE" })
+      .andWhere("examType.status = :status", { status: "ACTIVE" })
+      .andWhere("schedule.status = :scheduleStatus", {
+        scheduleStatus: "SCHEDULED",
+      });
+
+    query
+      .skip(skip)
+      .take(take)
+      .orderBy("schedule.examDate", "ASC")
+      .addOrderBy("schedule.startTime", "ASC");
+
+    const [data, total] = await query.getManyAndCount();
+    return { data, total };
+  }
+
+  /**
    * Get a single exam schedule by ID
    */
   async findOne(id: string): Promise<ExamSchedule> {

@@ -32,6 +32,7 @@
           <tr>
             <th>Name</th>
             <th>Room</th>
+            <th>Exam For</th>
             <th>Description</th>
             <th>Status</th>
             <th>Created</th>
@@ -44,6 +45,18 @@
               <strong>{{ examType.name }}</strong>
             </td>
             <td>{{ examType.room || "-" }}</td>
+            <td>
+              <span
+                :class="[
+                  'exam-for-badge',
+                  examType.examFor === 'CANDIDATE'
+                    ? 'badge-candidate'
+                    : 'badge-student',
+                ]"
+              >
+                {{ examType.examFor || "STUDENT" }}
+              </span>
+            </td>
             <td>{{ examType.description }}</td>
             <td>
               <button
@@ -78,7 +91,7 @@
             </td>
           </tr>
           <tr v-if="examTypes.length === 0">
-            <td colspan="6" class="empty-state">
+            <td colspan="7" class="empty-state">
               No exam types found. Create one to get started.
             </td>
           </tr>
@@ -127,6 +140,14 @@
                 class="form-control"
                 rows="3"
               ></textarea>
+            </div>
+
+            <div class="form-group">
+              <label>Exam For</label>
+              <select v-model="form.examFor" class="form-control">
+                <option value="STUDENT">Student</option>
+                <option value="CANDIDATE">Candidate</option>
+              </select>
             </div>
 
             <div class="form-group">
@@ -189,6 +210,7 @@ interface ExamType {
   id: string;
   name: string;
   room: string;
+  examFor: "STUDENT" | "CANDIDATE";
   description: string;
   status: "ACTIVE" | "INACTIVE";
   createdAt?: string | Date;
@@ -207,12 +229,14 @@ const form = ref<{
   id?: string;
   name: string;
   room: string;
+  examFor: string;
   description: string;
   status: string;
 }>({
   id: undefined,
   name: "",
   room: "",
+  examFor: "STUDENT",
   description: "",
   status: "ACTIVE",
 });
@@ -230,6 +254,7 @@ async function fetchExamTypes() {
       id: e.id,
       name: e.name,
       room: e.room || "",
+      examFor: e.examFor || "STUDENT",
       description: e.description,
       status: e.status,
       createdAt: e.createdAt,
@@ -247,6 +272,7 @@ function openModal() {
   form.value = {
     name: "",
     room: "",
+    examFor: "STUDENT",
     description: "",
     status: "ACTIVE",
   };
@@ -260,6 +286,7 @@ function editExamType(examType: any) {
     id: examType.id,
     name: examType.name,
     room: examType.room || "",
+    examFor: examType.examFor || "STUDENT",
     description: examType.description,
     status: examType.status,
   };
@@ -272,6 +299,7 @@ function closeModal() {
   form.value = {
     name: "",
     room: "",
+    examFor: "STUDENT",
     description: "",
     status: "ACTIVE",
   };
@@ -518,6 +546,25 @@ async function confirmDelete() {
 
 .status-inactive:hover {
   background-color: #fecaca;
+}
+
+/* Exam For Badge */
+.exam-for-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badge-student {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.badge-candidate {
+  background-color: #fef3c7;
+  color: #92400e;
 }
 
 /* Action Links */

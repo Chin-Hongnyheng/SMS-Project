@@ -12,6 +12,11 @@ export enum ExamTypeStatus {
   INACTIVE = "INACTIVE",
 }
 
+export enum ExamFor {
+  STUDENT = "STUDENT",
+  CANDIDATE = "CANDIDATE",
+}
+
 @Entity("exam_types")
 export class ExamType {
   @PrimaryGeneratedColumn("uuid")
@@ -32,6 +37,13 @@ export class ExamType {
     default: ExamTypeStatus.ACTIVE,
   })
   status: ExamTypeStatus;
+
+  @Column({
+    type: "enum",
+    enum: ExamFor,
+    default: ExamFor.STUDENT,
+  })
+  examFor: ExamFor;
 
   @CreateDateColumn()
   createdAt: Date;
