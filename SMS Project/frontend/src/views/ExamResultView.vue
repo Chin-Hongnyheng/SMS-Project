@@ -24,21 +24,50 @@
     <div class="filter-container">
       <div class="filter-grid">
         <div class="form-group">
-          <label>Search by Student ID</label>
-          <input
+          <label>Filter by Candidate</label>
+          <select
             v-model="filters.studentId"
-            @input="debouncedFetch"
-            type="text"
-            placeholder="Enter Student ID"
+            @change="fetchResults"
             class="form-control"
-          />
+          >
+            <option value="">All Candidates</option>
+            <option v-for="c in candidates" :key="c.id" :value="String(c.id)">
+              {{ c.username }} ({{ c.email }})
+            </option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Filter by Course</label>
+          <select
+            v-model="filters.courseId"
+            @change="fetchResults"
+            class="form-control"
+          >
+            <option value="">All Courses</option>
+            <option
+              v-for="course in courses"
+              :key="course.id"
+              :value="course.id"
+            >
+              {{ course.name }}
+            </option>
+          </select>
         </div>
         <div class="form-group">
           <label>Filter by Exam Schedule</label>
-          <select v-model="filters.examScheduleId" @change="fetchResults" class="form-control">
+          <select
+            v-model="filters.examScheduleId"
+            @change="fetchResults"
+            class="form-control"
+          >
             <option value="">All Schedules</option>
-            <option v-for="schedule in schedules" :key="schedule.id" :value="schedule.id">
-              {{ schedule.subject }} - {{ formatDate(schedule.examDate) }}
+            <option
+              v-for="schedule in filteredSchedules"
+              :key="schedule.id"
+              :value="schedule.id"
+            >
+              {{ schedule.course?.courseName || "N/A" }} -
+              {{ formatDate(schedule.examDate) }}
             </option>
           </select>
         </div>
@@ -61,8 +90,8 @@
       <table class="data-table">
         <thead>
           <tr>
-            <th>Student ID</th>
-            <th>Exam Subject</th>
+            <th>Candidate</th>
+            <th>Course</th>
             <th>Exam Date</th>
             <th>Score</th>
             <th>Grade</th>
@@ -73,28 +102,44 @@
         <tbody>
           <tr v-for="result in results" :key="result.id">
             <td>
-              <strong>{{ result.studentId.slice(0, 8) }}...</strong>
+              <strong>{{ getCandidateName(result.studentId) }}</strong>
             </td>
-            <td>{{ result.examSchedule?.subject || 'N/A' }}</td>
+            <td>{{ result.examSchedule?.course?.courseName || "N/A" }}</td>
             <td>
-              {{ result.examSchedule?.examDate ? formatDate(result.examSchedule.examDate) : 'N/A' }}
+              {{
+                result.examSchedule?.examDate
+                  ? formatDate(result.examSchedule.examDate)
+                  : "N/A"
+              }}
             </td>
             <td>{{ result.score }}%</td>
             <td>
-              <span :class="['grade-badge', 'grade-' + result.grade.toLowerCase()]">
+              <span
+                :class="['grade-badge', 'grade-' + result.grade.toLowerCase()]"
+              >
                 {{ result.grade }}
               </span>
             </td>
             <td>
               <span
-                :class="['status-badge', result.remarks === 'PASS' ? 'status-pass' : 'status-fail']"
+                :class="[
+                  'status-badge',
+                  result.remarks === 'PASS' ? 'status-pass' : 'status-fail',
+                ]"
               >
                 {{ result.remarks }}
               </span>
             </td>
             <td class="actions">
-              <button @click="editResult(result)" class="action-link edit">Edit</button>
-              <button @click="deleteResult(result.id)" class="action-link delete">Delete</button>
+              <button @click="editResult(result)" class="action-link edit">
+                Edit
+              </button>
+              <button
+                @click="deleteResult(result.id)"
+                class="action-link delete"
+              >
+                Delete
+              </button>
             </td>
           </tr>
           <tr v-if="results.length === 0">
@@ -108,27 +153,39 @@
     <teleport to="body">
       <div v-if="showModal" class="modal-overlay">
         <div class="modal-box">
-          <h2>{{ isEditing ? 'Edit Exam Result' : 'Add New Result' }}</h2>
+          <h2>{{ isEditing ? "Edit Exam Result" : "Add New Result" }}</h2>
 
           <!-- Form -->
           <form @submit.prevent="submitForm">
             <div class="form-group">
-              <label>Student ID</label>
-              <input
-                v-model="form.studentId"
-                required
-                type="text"
-                class="form-control"
-                placeholder="Enter student UUID"
-              />
+              <label>Candidate</label>
+              <select v-model="form.studentId" required class="form-control">
+                <option value="">Select Candidate</option>
+                <option
+                  v-for="c in candidates"
+                  :key="c.id"
+                  :value="String(c.id)"
+                >
+                  {{ c.username }} ({{ c.email }})
+                </option>
+              </select>
             </div>
 
             <div class="form-group">
-              <label>Exam Schedule</label>
-              <select v-model="form.examScheduleId" required class="form-control">
+              <label>Exam Schedule (Candidate Exams Only)</label>
+              <select
+                v-model="form.examScheduleId"
+                required
+                class="form-control"
+              >
                 <option value="">Select Schedule</option>
-                <option v-for="schedule in schedules" :key="schedule.id" :value="schedule.id">
-                  {{ schedule.subject }} - {{ formatDate(schedule.examDate) }}
+                <option
+                  v-for="schedule in candidateSchedules"
+                  :key="schedule.id"
+                  :value="schedule.id"
+                >
+                  {{ schedule.course?.courseName || "N/A" }} -
+                  {{ formatDate(schedule.examDate) }}
                 </option>
               </select>
             </div>
@@ -146,22 +203,41 @@
               />
             </div>
 
-            <div class="grade-preview" v-if="form.score !== null && form.score !== undefined">
+            <div
+              class="grade-preview"
+              v-if="form.score !== null && form.score !== undefined"
+            >
               <span class="preview-label">Auto Grade:</span>
-              <span :class="['grade-badge', 'grade-' + calculateGrade(form.score).toLowerCase()]">
+              <span
+                :class="[
+                  'grade-badge',
+                  'grade-' + calculateGrade(form.score).toLowerCase(),
+                ]"
+              >
                 {{ calculateGrade(form.score) }}
               </span>
-              <span :class="['status-badge', form.score >= 50 ? 'status-pass' : 'status-fail']">
-                {{ form.score >= 50 ? 'PASS' : 'FAIL' }}
+              <span
+                :class="[
+                  'status-badge',
+                  form.score >= 50 ? 'status-pass' : 'status-fail',
+                ]"
+              >
+                {{ form.score >= 50 ? "PASS" : "FAIL" }}
               </span>
             </div>
 
             <!-- Form Actions -->
             <div class="form-actions">
               <button type="submit" class="btn btn-primary">
-                {{ isEditing ? 'Update' : 'Add Result' }}
+                {{ isEditing ? "Update" : "Add Result" }}
               </button>
-              <button type="button" @click="closeModal()" class="btn btn-secondary">Cancel</button>
+              <button
+                type="button"
+                @click="closeModal()"
+                class="btn btn-secondary"
+              >
+                Cancel
+              </button>
             </div>
           </form>
         </div>
@@ -173,10 +249,19 @@
       <div v-if="showDeleteConfirm" class="modal-overlay">
         <div class="modal-box">
           <h3>Delete Result</h3>
-          <p class="confirm-text">Are you sure? This action cannot be undone.</p>
+          <p class="confirm-text">
+            Are you sure? This action cannot be undone.
+          </p>
           <div class="form-actions">
-            <button @click="confirmDelete()" class="btn btn-danger">Delete</button>
-            <button @click="showDeleteConfirm = false" class="btn btn-secondary">Cancel</button>
+            <button @click="confirmDelete()" class="btn btn-danger">
+              Delete
+            </button>
+            <button
+              @click="showDeleteConfirm = false"
+              class="btn btn-secondary"
+            >
+              Cancel
+            </button>
           </div>
         </div>
       </div>
@@ -185,161 +270,218 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { examSchedulesService, examResultsService } from '@/api/examService'
+import { ref, onMounted, computed } from "vue";
+import {
+  examSchedulesService,
+  examResultsService,
+  candidatesService,
+} from "@/api/examService";
 
 interface ExamSchedule {
-  id: string
-  subject: string
-  examDate: string
+  id: string;
+  subject: string;
+  course?: { id: number; courseName: string };
+  examType?: { id: string; name: string; examFor: string };
+  examDate: string;
+}
+
+interface Candidate {
+  id: number;
+  username: string;
+  email: string;
+  createdAt: string;
 }
 
 interface ExamResult {
-  id: string
-  studentId: string
-  examScheduleId: string
-  score: number
-  grade: string
-  remarks: string
-  examSchedule?: ExamSchedule
+  id: string;
+  studentId: string;
+  examScheduleId: string;
+  score: number;
+  grade: string;
+  remarks: string;
+  examSchedule?: ExamSchedule;
 }
 
-const results = ref<ExamResult[]>([])
-const schedules = ref<ExamSchedule[]>([])
-const loading = ref(false)
-const showModal = ref(false)
-const showDeleteConfirm = ref(false)
-const isEditing = ref(false)
-const successMessage = ref('')
-const errorMessage = ref('')
-const deleteId = ref<string | null>(null)
+const results = ref<ExamResult[]>([]);
+const schedules = ref<ExamSchedule[]>([]);
+const candidates = ref<Candidate[]>([]);
+const loading = ref(false);
+const showModal = ref(false);
+const showDeleteConfirm = ref(false);
+const isEditing = ref(false);
+const successMessage = ref("");
+const errorMessage = ref("");
+const deleteId = ref<string | null>(null);
 
 const filters = ref({
-  studentId: '',
-  examScheduleId: '',
-})
+  studentId: "",
+  examScheduleId: "",
+  courseId: "",
+});
 
 const form = ref({
-  studentId: '',
-  examScheduleId: '',
+  studentId: "",
+  examScheduleId: "",
   score: 0,
-})
+});
 
-let debounceTimer: ReturnType<typeof setTimeout> | null = null
+// Computed schedules filtered to candidate exams only
+const candidateSchedules = computed(() =>
+  schedules.value.filter((s) => s.examType?.examFor === "CANDIDATE"),
+);
+
+// Get unique courses from candidate schedules
+const courses = computed(() => {
+  const courseMap = new Map<number, string>();
+  candidateSchedules.value.forEach((s) => {
+    if (s.course?.id && s.course?.courseName) {
+      courseMap.set(s.course.id, s.course.courseName);
+    }
+  });
+  return Array.from(courseMap, ([id, name]) => ({ id, name }));
+});
+
+// Filter schedules by selected course
+const filteredSchedules = computed(() => {
+  if (!filters.value.courseId) return candidateSchedules.value;
+  return candidateSchedules.value.filter(
+    (s) => s.course?.id === Number(filters.value.courseId),
+  );
+});
+
+// Get candidate name by ID
+function getCandidateName(studentId: string): string {
+  const candidate = candidates.value.find((c) => String(c.id) === studentId);
+  return candidate ? candidate.username : studentId.slice(0, 8) + "...";
+}
+
+let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 onMounted(() => {
-  loadSchedules()
-  fetchResults()
-})
+  loadSchedules();
+  loadCandidates();
+  fetchResults();
+});
+
+async function loadCandidates() {
+  try {
+    candidates.value = await candidatesService.getAll();
+  } catch (error) {
+    console.error("Failed to load candidates");
+  }
+}
 
 async function loadSchedules() {
   try {
-    const response = await examSchedulesService.getAll(0, 100)
-    schedules.value = response.data
+    const response = await examSchedulesService.getAll(0, 100);
+    schedules.value = response.data;
   } catch (error) {
-    console.error('Failed to load schedules')
+    console.error("Failed to load schedules");
   }
 }
 
 async function fetchResults() {
-  loading.value = true
+  loading.value = true;
   try {
     const response = await examResultsService.getAll(
       0,
       100,
       filters.value.studentId || undefined,
       filters.value.examScheduleId || undefined,
-    )
-    results.value = response.data
+    );
+    results.value = response.data;
   } catch (error: any) {
-    errorMessage.value = error.response?.data?.message || 'Failed to load results'
+    errorMessage.value =
+      error.response?.data?.message || "Failed to load results";
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
 function debouncedFetch() {
-  if (debounceTimer) clearTimeout(debounceTimer)
+  if (debounceTimer) clearTimeout(debounceTimer);
   debounceTimer = setTimeout(() => {
-    fetchResults()
-  }, 500)
+    fetchResults();
+  }, 500);
 }
 
 function clearFilters() {
-  filters.value = { studentId: '', examScheduleId: '' }
-  fetchResults()
+  filters.value = { studentId: "", examScheduleId: "", courseId: "" };
+  fetchResults();
 }
 
 function openModal() {
-  isEditing.value = false
+  isEditing.value = false;
   form.value = {
-    studentId: '',
-    examScheduleId: '',
+    studentId: "",
+    examScheduleId: "",
     score: 0,
-  }
-  showModal.value = true
+  };
+  showModal.value = true;
 }
 
 function editResult(result: ExamResult) {
-  isEditing.value = true
+  isEditing.value = true;
   form.value = {
     studentId: result.studentId,
     examScheduleId: result.examScheduleId,
     score: result.score,
-  }
-  ;(form.value as any).id = result.id
-  showModal.value = true
+  };
+  (form.value as any).id = result.id;
+  showModal.value = true;
 }
 
 function closeModal() {
-  showModal.value = false
+  showModal.value = false;
 }
 
 async function submitForm() {
   try {
     if (isEditing.value && (form.value as any).id) {
-      await examResultsService.update((form.value as any).id, form.value)
-      successMessage.value = 'Result updated successfully'
+      await examResultsService.update((form.value as any).id, form.value);
+      successMessage.value = "Result updated successfully";
     } else {
-      await examResultsService.create(form.value)
-      successMessage.value = 'Result added successfully'
+      await examResultsService.create(form.value);
+      successMessage.value = "Result added successfully";
     }
-    closeModal()
-    await fetchResults()
-    setTimeout(() => (successMessage.value = ''), 3000)
+    closeModal();
+    await fetchResults();
+    setTimeout(() => (successMessage.value = ""), 3000);
   } catch (error: any) {
-    errorMessage.value = error.response?.data?.message || 'Failed to save result'
+    errorMessage.value =
+      error.response?.data?.message || "Failed to save result";
   }
 }
 
 function deleteResult(id: string) {
-  deleteId.value = id
-  showDeleteConfirm.value = true
+  deleteId.value = id;
+  showDeleteConfirm.value = true;
 }
 
 async function confirmDelete() {
-  if (!deleteId.value) return
+  if (!deleteId.value) return;
   try {
-    await examResultsService.delete(deleteId.value)
-    successMessage.value = 'Result deleted successfully'
-    await fetchResults()
-    showDeleteConfirm.value = false
-    setTimeout(() => (successMessage.value = ''), 3000)
+    await examResultsService.delete(deleteId.value);
+    successMessage.value = "Result deleted successfully";
+    await fetchResults();
+    showDeleteConfirm.value = false;
+    setTimeout(() => (successMessage.value = ""), 3000);
   } catch (error: any) {
-    errorMessage.value = error.response?.data?.message || 'Failed to delete result'
+    errorMessage.value =
+      error.response?.data?.message || "Failed to delete result";
   }
 }
 
 function formatDate(dateString: string) {
-  return new Date(dateString).toLocaleDateString()
+  return new Date(dateString).toLocaleDateString();
 }
 
 function calculateGrade(score: number): string {
-  if (score >= 85) return 'A'
-  if (score >= 70) return 'B'
-  if (score >= 55) return 'C'
-  if (score >= 50) return 'D'
-  return 'F'
+  if (score >= 85) return "A";
+  if (score >= 70) return "B";
+  if (score >= 55) return "C";
+  if (score >= 50) return "D";
+  return "F";
 }
 </script>
 
@@ -349,7 +491,7 @@ function calculateGrade(score: number): string {
   padding: 2rem;
   background-color: #f9fafb;
   min-height: 100vh;
-  font-family: 'Nunito', sans-serif;
+  font-family: "Nunito", sans-serif;
 }
 
 /* Header */

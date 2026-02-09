@@ -2,17 +2,17 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
 import {
   ExamResult,
   ExamResultGrade,
   ExamResultRemark,
-} from './entities/exam-result.entity';
-import { CreateExamResultDto } from './dto/create-exam-result.dto';
-import { UpdateExamResultDto } from './dto/update-exam-result.dto';
-import { ExamSchedulesService } from '../exam-schedules/exam-schedules.service';
+} from "./entities/exam-result.entity";
+import { CreateExamResultDto } from "./dto/create-exam-result.dto";
+import { UpdateExamResultDto } from "./dto/update-exam-result.dto";
+import { ExamSchedulesService } from "../exam-schedules/exam-schedules.service";
 
 @Injectable()
 export class ExamResultsService {
@@ -41,7 +41,7 @@ export class ExamResultsService {
 
     if (existingResult) {
       throw new BadRequestException(
-        'Result already exists for this student and exam schedule',
+        "Result already exists for this student and exam schedule",
       );
     }
 
@@ -70,19 +70,23 @@ export class ExamResultsService {
     studentId?: string,
     examScheduleId?: string,
   ): Promise<{ data: ExamResult[]; total: number }> {
-    const query = this.examResultRepository.createQueryBuilder('result');
+    const query = this.examResultRepository
+      .createQueryBuilder("result")
+      .leftJoinAndSelect("result.examSchedule", "examSchedule")
+      .leftJoinAndSelect("examSchedule.course", "course")
+      .leftJoinAndSelect("examSchedule.examType", "examType");
 
     if (studentId) {
-      query.andWhere('result.studentId = :studentId', { studentId });
+      query.andWhere("result.studentId = :studentId", { studentId });
     }
 
     if (examScheduleId) {
-      query.andWhere('result.examScheduleId = :examScheduleId', {
+      query.andWhere("result.examScheduleId = :examScheduleId", {
         examScheduleId,
       });
     }
 
-    query.skip(skip).take(take).orderBy('result.enteredAt', 'DESC');
+    query.skip(skip).take(take).orderBy("result.enteredAt", "DESC");
 
     const [data, total] = await query.getManyAndCount();
     return { data, total };
@@ -94,7 +98,7 @@ export class ExamResultsService {
   async findOne(id: string): Promise<ExamResult> {
     const result = await this.examResultRepository.findOne({
       where: { id },
-      relations: ['examSchedule'],
+      relations: ["examSchedule"],
     });
 
     if (!result) {
@@ -149,14 +153,14 @@ export class ExamResultsService {
     studentId?: string,
     examScheduleId?: string,
   ): Promise<ExamResult[]> {
-    const query = this.examResultRepository.createQueryBuilder('result');
+    const query = this.examResultRepository.createQueryBuilder("result");
 
     if (studentId) {
-      query.andWhere('result.studentId = :studentId', { studentId });
+      query.andWhere("result.studentId = :studentId", { studentId });
     }
 
     if (examScheduleId) {
-      query.andWhere('result.examScheduleId = :examScheduleId', {
+      query.andWhere("result.examScheduleId = :examScheduleId", {
         examScheduleId,
       });
     }

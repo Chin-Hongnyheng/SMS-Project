@@ -181,9 +181,37 @@ class ExamResultsService {
     });
     return response.data;
   }
+
+  async getMyResults(studentId: string): Promise<PaginatedResponse<any>> {
+    const response = await this.api.get("/", {
+      params: { skip: 0, take: 100, studentId },
+    });
+    return response.data;
+  }
+}
+
+// Candidates API Service (from auth-service)
+class CandidatesService {
+  private api: AxiosInstance;
+
+  constructor() {
+    this.api = axios.create({
+      baseURL: "http://localhost:3001/auth",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    this.api.interceptors.request.use(setAuthHeader);
+  }
+
+  async getAll(): Promise<any[]> {
+    const response = await this.api.get("/candidates");
+    return response.data;
+  }
 }
 
 // Export singletons
 export const examTypesService = new ExamTypesService();
 export const examSchedulesService = new ExamSchedulesService();
 export const examResultsService = new ExamResultsService();
+export const candidatesService = new CandidatesService();

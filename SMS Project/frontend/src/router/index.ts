@@ -91,6 +91,18 @@ const router = createRouter({
       component: () => import("../views/ExamResultView.vue"),
     },
     {
+      path: "/candidate-exams",
+      name: "candidate-exams",
+      meta: { requiresAuth: true, roles: ["Student"] },
+      component: () => import("../views/CandidateExamView.vue"),
+    },
+    {
+      path: "/my-results",
+      name: "my-results",
+      meta: { requiresAuth: true, roles: ["Student"] },
+      component: () => import("../views/MyResultsView.vue"),
+    },
+    {
       path: "/attendance",
       name: "attendance",
       meta: { requiresAuth: true, roles: ["Teacher", "Admin"] },

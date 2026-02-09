@@ -146,4 +146,23 @@ export class AuthService {
 
     return { accessToken, refreshToken };
   }
+
+  // --- GET ALL CANDIDATES (Users with Student role) ---
+  async getAllCandidates() {
+    const users = await this.users.find({
+      relations: ['roles', 'roles.role'],
+      order: { createdAt: 'DESC' },
+    });
+
+    // Filter users with Student role and map to safe response
+    return users
+      .filter((user) => user.roles?.some((ur) => ur.role?.name === 'Student'))
+      .map((user) => ({
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        createdAt: user.createdAt,
+        isActive: user.isActive,
+      }));
+  }
 }
