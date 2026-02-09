@@ -1,5 +1,5 @@
 <template>
-  <aside class="sidebar" :class="{ 'collapsed': isCollapsed }">
+  <aside class="sidebar" :class="{ collapsed: isCollapsed }">
     <!-- Logo Section -->
     <div class="logo-section">
       <img src="@/assets/logortc.png" alt="RTC Logo" class="logo-img" />
@@ -37,72 +37,112 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { RouterLink, useRouter, useRoute } from 'vue-router'
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { ref, computed } from "vue";
+import { RouterLink, useRouter, useRoute } from "vue-router";
+import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
-const router = useRouter()
+const router = useRouter();
 
-defineProps<{ isCollapsed: boolean }>()
+defineProps<{ isCollapsed: boolean }>();
 
 const fas = {
-  house: 'house',
-  academic: 'graduation-cap',
-  admissions: 'building-columns',
-  report: 'chart-simple',
-  examination: 'clipboard-list',
-  attendance: 'user-check',
-  registration: 'user-plus',
-  account: 'circle-user',
-  transcript: 'rectangle-list',
-  student: 'user-graduate',
-  logout: 'angle-right',
-}
+  house: "house",
+  academic: "graduation-cap",
+  admissions: "building-columns",
+  report: "chart-simple",
+  examination: "clipboard-list",
+  attendance: "user-check",
+  registration: "user-plus",
+  account: "circle-user",
+  transcript: "rectangle-list",
+  student: "user-graduate",
+  logout: "angle-right",
+  myExams: "file-lines",
+};
 
-const route = useRoute()
+const route = useRoute();
 const isNavActive = (path: string) => {
   // Academic should stay active for curriculum & subject pages
-  if (path === '/academic') {
-    return (
-      route.path === '/academic' ||
-      route.path.startsWith('/curriculum')
-    )
+  if (path === "/academic") {
+    return route.path === "/academic" || route.path.startsWith("/curriculum");
   }
 
   // Normal behavior for other menu items
-  return route.path.startsWith(path)
-}
-
+  return route.path.startsWith(path);
+};
 
 const navItems = [
-  { path: '/dashboard', title: 'Dashboard', icon: fas.house, roles: ['Admin', 'Teacher', 'Student'] },
-  { path: '/student', title: 'Student', icon: fas.student, roles: ['Admin', 'Teacher'] },
-  { path: '/academic', title: 'Academic', icon: fas.academic, roles: ['Admin', 'Teacher', 'Student'] },
-  { path: '/examination', title: 'Examination', icon: fas.examination, roles: ['Admin', 'Teacher'] },
-  { path: '/attendance', title: 'Attendance', icon: fas.attendance, roles: ['Admin', 'Teacher'] },
-  { path: '/registration', title: 'Registration', icon: fas.registration, roles: ['Student'] },
-  { path: '/account', title: 'Account', icon: fas.account, roles: ['Admin', 'Teacher', 'Student'] },
-]
+  {
+    path: "/dashboard",
+    title: "Dashboard",
+    icon: fas.house,
+    roles: ["Admin", "Teacher", "Student"],
+  },
+  {
+    path: "/student",
+    title: "Student",
+    icon: fas.student,
+    roles: ["Admin", "Teacher"],
+  },
+  {
+    path: "/academic",
+    title: "Academic",
+    icon: fas.academic,
+    roles: ["Admin", "Teacher", "Student"],
+  },
+  {
+    path: "/examination",
+    title: "Examination",
+    icon: fas.examination,
+    roles: ["Admin", "Teacher"],
+  },
+  {
+    path: "/candidate-exams",
+    title: "My Exams",
+    icon: fas.myExams,
+    roles: ["Student"],
+  },
+  {
+    path: "/attendance",
+    title: "Attendance",
+    icon: fas.attendance,
+    roles: ["Admin", "Teacher"],
+  },
+  {
+    path: "/registration",
+    title: "Registration",
+    icon: fas.registration,
+    roles: ["Student"],
+  },
+  {
+    path: "/account",
+    title: "Account",
+    icon: fas.account,
+    roles: ["Admin", "Teacher", "Student"],
+  },
+];
 
 // Get user roles from sessionStorage
-const rawUserRoles: string[] = JSON.parse(sessionStorage.getItem('roles') || '[]')
+const rawUserRoles: string[] = JSON.parse(
+  sessionStorage.getItem("roles") || "[]",
+);
 
 // Normalize user roles (case-insensitive)
-const userRoles = rawUserRoles.map(role => role.toLowerCase())
+const userRoles = rawUserRoles.map((role) => role.toLowerCase());
 
 // Filter nav items based on role (case-insensitive)
 const filteredNavItems = computed(() =>
-  navItems.filter(item =>
-    item.roles.some(role => userRoles.includes(role.toLowerCase()))
-  )
-)
+  navItems.filter((item) =>
+    item.roles.some((role) => userRoles.includes(role.toLowerCase())),
+  ),
+);
 
 // Logout function
 const logout = () => {
-  sessionStorage.removeItem('token')
-  sessionStorage.removeItem('roles')
-  router.replace('/login')
-}
+  sessionStorage.removeItem("token");
+  sessionStorage.removeItem("roles");
+  router.replace("/login");
+};
 </script>
 
 <style scoped>
@@ -130,7 +170,7 @@ const logout = () => {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  font-family: 'Nunito', sans-serif;
+  font-family: "Nunito", sans-serif;
   font-weight: 900;
   text-align: center;
   margin-bottom: 30px;
