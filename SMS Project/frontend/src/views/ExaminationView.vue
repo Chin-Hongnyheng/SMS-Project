@@ -16,7 +16,11 @@
           <div class="progress-bar">
             <div
               class="progress-fill"
-              :style="{ width: getPercentage(stats.activeExamTypes, stats.totalExamTypes) + '%' }"
+              :style="{
+                width:
+                  getPercentage(stats.activeExamTypes, stats.totalExamTypes) +
+                  '%',
+              }"
             ></div>
           </div>
         </div>
@@ -28,7 +32,11 @@
           <div class="progress-bar">
             <div
               class="progress-fill progress-blue"
-              :style="{ width: getPercentage(stats.scheduledExams, stats.totalSchedules) + '%' }"
+              :style="{
+                width:
+                  getPercentage(stats.scheduledExams, stats.totalSchedules) +
+                  '%',
+              }"
             ></div>
           </div>
         </div>
@@ -40,7 +48,10 @@
           <div class="progress-bar">
             <div
               class="progress-fill progress-green"
-              :style="{ width: getPercentage(stats.passedResults, stats.totalResults) + '%' }"
+              :style="{
+                width:
+                  getPercentage(stats.passedResults, stats.totalResults) + '%',
+              }"
             ></div>
           </div>
         </div>
@@ -68,13 +79,21 @@
               <button class="btn btn-primary" @click="navigateTo('exam-types')">
                 📋 Manage Exam Types
               </button>
-              <button class="btn btn-primary" @click="navigateTo('exam-schedules')">
+              <button
+                class="btn btn-primary"
+                @click="navigateTo('exam-schedules')"
+              >
                 📅 Manage Schedules
               </button>
-              <button class="btn btn-primary" @click="navigateTo('exam-results')">
+              <button
+                class="btn btn-primary"
+                @click="navigateTo('exam-results')"
+              >
                 📊 View Results
               </button>
-              <button class="btn btn-secondary" @click="refreshData">🔄 Refresh Data</button>
+              <button class="btn btn-secondary" @click="refreshData">
+                🔄 Refresh Data
+              </button>
             </div>
           </div>
 
@@ -82,7 +101,12 @@
           <div class="card">
             <div class="card-header-flex">
               <h2 class="card-title">Recent Schedules</h2>
-              <button class="btn btn-link" @click="navigateTo('exam-schedules')">View All →</button>
+              <button
+                class="btn btn-link"
+                @click="navigateTo('exam-schedules')"
+              >
+                View All →
+              </button>
             </div>
             <ul class="list-stack" v-if="recentSchedules.length > 0">
               <li
@@ -92,12 +116,18 @@
                 @click="navigateTo('exam-schedules')"
               >
                 <p class="item-title">{{ schedule.subject }}</p>
+                <p class="item-subtitle">{{ schedule.course }}</p>
                 <p class="item-subtitle">
-                  {{ formatDate(schedule.examDate) }} | {{ schedule.startTime }} -
-                  {{ schedule.endTime }} |
+                  {{ formatDate(schedule.examDate) }} |
+                  {{ schedule.startTime }} - {{ schedule.endTime }} |
                   {{ schedule.room }}
                 </p>
-                <span :class="['status-badge', 'status-' + schedule.status.toLowerCase()]">
+                <span
+                  :class="[
+                    'status-badge',
+                    'status-' + schedule.status.toLowerCase(),
+                  ]"
+                >
                   {{ schedule.status }}
                 </span>
               </li>
@@ -112,7 +142,9 @@
           <div class="card">
             <div class="card-header-flex">
               <h2 class="card-title">Exam Types</h2>
-              <button class="btn btn-link" @click="navigateTo('exam-types')">Manage →</button>
+              <button class="btn btn-link" @click="navigateTo('exam-types')">
+                Manage →
+              </button>
             </div>
             <ul class="list-stack" v-if="examTypes.length > 0">
               <li
@@ -127,7 +159,9 @@
                 <span
                   :class="[
                     'status-badge',
-                    examType.status === 'ACTIVE' ? 'status-active' : 'status-inactive',
+                    examType.status === 'ACTIVE'
+                      ? 'status-active'
+                      : 'status-inactive',
                   ]"
                 >
                   {{ examType.status }}
@@ -141,7 +175,9 @@
           <div class="card">
             <div class="card-header-flex">
               <h2 class="card-title">Recent Results</h2>
-              <button class="btn btn-link" @click="navigateTo('exam-results')">View All →</button>
+              <button class="btn btn-link" @click="navigateTo('exam-results')">
+                View All →
+              </button>
             </div>
             <ul class="list-stack" v-if="recentResults.length > 0">
               <li
@@ -150,11 +186,18 @@
                 class="list-item-card flex-between"
               >
                 <div>
-                  <p class="item-title">Student: {{ result.studentId.slice(0, 8) }}...</p>
+                  <p class="item-title">
+                    Student: {{ result.studentId.slice(0, 8) }}...
+                  </p>
                   <p class="item-subtitle">Score: {{ result.score }}%</p>
                 </div>
                 <div class="result-badges">
-                  <span :class="['grade-badge', 'grade-' + result.grade.toLowerCase()]">
+                  <span
+                    :class="[
+                      'grade-badge',
+                      'grade-' + result.grade.toLowerCase(),
+                    ]"
+                  >
                     {{ result.grade }}
                   </span>
                   <span
@@ -188,56 +231,62 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { examTypesService, examSchedulesService, examResultsService } from '@/api/examService'
-import CandidateExamView from './CandidateExamView.vue'
+import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import {
+  examTypesService,
+  examSchedulesService,
+  examResultsService,
+} from "@/api/examService";
+import CandidateExamView from "./CandidateExamView.vue";
 
 // ------------------ Types ------------------
 interface ExamType {
-  id: string
-  name: string
-  description: string
-  status: 'ACTIVE' | 'INACTIVE'
+  id: string;
+  name: string;
+  description: string;
+  status: "ACTIVE" | "INACTIVE";
 }
 
 interface ExamSchedule {
-  id: string
-  subject: string
-  examDate: string
-  startTime: string
-  endTime: string
-  room: string
-  status: string
+  id: string;
+  subject: string;
+  course: string;
+  examType: string;
+  examDate: string;
+  startTime: string;
+  endTime: string;
+  room: string;
+  status: string;
 }
 
 interface ExamResult {
-  id: string
-  studentId: string
-  score: number
-  grade: string
-  remarks: string
+  id: string;
+  studentId: string;
+  score: number;
+  grade: string;
+  remarks: string;
 }
 
 interface Stats {
-  totalExamTypes: number
-  activeExamTypes: number
-  totalSchedules: number
-  scheduledExams: number
-  totalResults: number
-  passedResults: number
-  averageScore: number
+  totalExamTypes: number;
+  activeExamTypes: number;
+  totalSchedules: number;
+  scheduledExams: number;
+  totalResults: number;
+  passedResults: number;
+  averageScore: number;
 }
 
 // ------------------ Refs ------------------
-const router = useRouter()
-const loading = ref(true)
-const errorMessage = ref('')
-const userRole = ref<string | null>(null) // ✅ Already exists
+const router = useRouter();
+const loading = ref(true);
+const errorMessage = ref("");
+const userRole = ref<string | null>(null); // ✅ Already exists
 
-const examTypes = ref<ExamType[]>([])
-const recentSchedules = ref<ExamSchedule[]>([])
-const recentResults = ref<ExamResult[]>([])
+const examTypes = ref<ExamType[]>([]);
+const recentSchedules = ref<ExamSchedule[]>([]);
+const recentResults = ref<ExamResult[]>([]);
 
 const stats = ref<Stats>({
   totalExamTypes: 0,
@@ -247,13 +296,13 @@ const stats = ref<Stats>({
   totalResults: 0,
   passedResults: 0,
   averageScore: 0,
-})
+});
 
 // ------------------ Lifecycle ------------------
 onMounted(async () => {
   try {
     // ✅ SAME LOGIC AS THE WORKING PAGE
-    const roles = sessionStorage.getItem('roles');
+    const roles = sessionStorage.getItem("roles");
 
     if (roles) {
       const parsedRoles = JSON.parse(roles) as string[];
@@ -264,91 +313,97 @@ onMounted(async () => {
     userRole.value = userRole.value?.toLowerCase() || null;
 
     // Load dashboard data only for admin/teacher
-    if (userRole.value === 'admin' || userRole.value === 'teacher') {
+    if (userRole.value === "admin" || userRole.value === "teacher") {
       await fetchAllData();
     }
-
   } catch (error) {
-    console.error('Failed to get user role', error);
-    errorMessage.value = 'Failed to determine user role';
+    console.error("Failed to get user role", error);
+    errorMessage.value = "Failed to determine user role";
   }
 });
 
-
-
-
 // ------------------ Methods ------------------
 async function fetchAllData() {
-  loading.value = true
-  errorMessage.value = ''
+  loading.value = true;
+  errorMessage.value = "";
 
   try {
     const [typesRes, schedulesRes, resultsRes] = await Promise.all([
       examTypesService.getAll(0, 100),
       examSchedulesService.getAll(0, 5),
       examResultsService.getAll(0, 5),
-    ])
+    ]);
 
     // Exam Types
-    examTypes.value = typesRes.data.slice(0, 5)
-    stats.value.totalExamTypes = typesRes.total || typesRes.data.length
+    examTypes.value = typesRes.data.slice(0, 5);
+    stats.value.totalExamTypes = typesRes.total || typesRes.data.length;
     stats.value.activeExamTypes = typesRes.data.filter(
-      (t: ExamType) => t.status === 'ACTIVE',
-    ).length
+      (t: ExamType) => t.status === "ACTIVE",
+    ).length;
 
-    // Schedules
-    recentSchedules.value = schedulesRes.data
-    stats.value.totalSchedules = schedulesRes.total || schedulesRes.data.length
+    // Schedules - map nested objects to strings
+    recentSchedules.value = schedulesRes.data.map((s: any) => ({
+      id: s.id,
+      subject: s.subject?.name || "N/A",
+      course: s.course?.courseName || "N/A",
+      examType: s.examType?.name || "N/A",
+      examDate: s.examDate,
+      startTime: s.startTime,
+      endTime: s.endTime,
+      room: s.room,
+      status: s.status,
+    }));
+    stats.value.totalSchedules = schedulesRes.total || schedulesRes.data.length;
     stats.value.scheduledExams = schedulesRes.data.filter(
-      (s: ExamSchedule) => s.status === 'SCHEDULED',
-    ).length
+      (s: ExamSchedule) => s.status === "SCHEDULED",
+    ).length;
 
     // Results
-    recentResults.value = resultsRes.data
-    stats.value.totalResults = resultsRes.total || resultsRes.data.length
+    recentResults.value = resultsRes.data;
+    stats.value.totalResults = resultsRes.total || resultsRes.data.length;
     stats.value.passedResults = resultsRes.data.filter(
-      (r: ExamResult) => r.remarks === 'PASS',
-    ).length
+      (r: ExamResult) => r.remarks === "PASS",
+    ).length;
 
     // Average score
     if (resultsRes.data.length > 0) {
       const totalScore = resultsRes.data.reduce(
         (sum: number, r: ExamResult) => sum + Number(r.score),
         0,
-      )
-      stats.value.averageScore = totalScore / resultsRes.data.length
+      );
+      stats.value.averageScore = totalScore / resultsRes.data.length;
     }
   } catch (error: any) {
-    errorMessage.value = error.response?.data?.message || 'Failed to load exam data'
+    errorMessage.value =
+      error.response?.data?.message || "Failed to load exam data";
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
 function refreshData() {
-  fetchAllData()
+  fetchAllData();
 }
 
 function navigateTo(routeName: string) {
-  router.push({ name: routeName })
+  router.push({ name: routeName });
 }
 
 function formatDate(dateStr: string): string {
-  if (!dateStr) return 'N/A'
-  return new Date(dateStr).toLocaleDateString('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
+  if (!dateStr) return "N/A";
+  return new Date(dateStr).toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 function getPercentage(value: number, total: number): number {
-  if (total === 0) return 0
-  return Math.round((value / total) * 100)
+  if (total === 0) return 0;
+  return Math.round((value / total) * 100);
 }
 </script>
-
 
 <style scoped>
 /* Variables for easy theming */
@@ -366,7 +421,7 @@ function getPercentage(value: number, total: number): number {
   padding: 1.5rem;
   background-color: var(--bg-gray);
   min-height: 100vh;
-  font-family: 'Nunito', sans-serif;
+  font-family: "Nunito", sans-serif;
   color: var(--text-main);
 }
 
