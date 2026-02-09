@@ -252,26 +252,28 @@ const stats = ref<Stats>({
 // ------------------ Lifecycle ------------------
 onMounted(async () => {
   try {
-    const storedRole = localStorage.getItem('role');
-    if (storedRole) {
-      try {
-        const parsed = JSON.parse(storedRole);
-        userRole.value = Array.isArray(parsed) ? parsed[0] : parsed;
-      } catch {
-        userRole.value = storedRole;
-      }
-      // <-- Add this line to normalize the role
-      userRole.value = userRole.value?.toString().trim().toLowerCase() || null;
+    // ✅ SAME LOGIC AS THE WORKING PAGE
+    const roles = sessionStorage.getItem('roles');
+
+    if (roles) {
+      const parsedRoles = JSON.parse(roles) as string[];
+      userRole.value = parsedRoles[0] || null;
     }
 
+    // Normalize role
+    userRole.value = userRole.value?.toLowerCase() || null;
+
+    // Load dashboard data only for admin/teacher
     if (userRole.value === 'admin' || userRole.value === 'teacher') {
-      fetchAllData();
+      await fetchAllData();
     }
+
   } catch (error) {
     console.error('Failed to get user role', error);
     errorMessage.value = 'Failed to determine user role';
   }
 });
+
 
 
 
