@@ -41,10 +41,9 @@
         </div>
 
         <div class="exam-card-body">
-          <h3 class="exam-title">{{ schedule.subject?.name || "Subject" }}</h3>
-          <p class="exam-course">
+          <h3 class="exam-title">
             {{ schedule.course?.courseName || "Course" }}
-          </p>
+          </h3>
 
           <div class="exam-details">
             <div class="detail-item">
@@ -88,10 +87,6 @@
             <div class="detail-row">
               <label>Course:</label>
               <span>{{ selectedSchedule.course?.courseName || "N/A" }}</span>
-            </div>
-            <div class="detail-row">
-              <label>Subject:</label>
-              <span>{{ selectedSchedule.subject?.name || "N/A" }}</span>
             </div>
             <div class="detail-row">
               <label>Date:</label>
