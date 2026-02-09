@@ -98,7 +98,10 @@
              <strong>{{ asg.title }}</strong>
              <p class="due-date">Due: {{ formatDate(asg.dueDate) }}</p>
            </div>
-           <button v-if="userRole === 'student'" class="submit-btn">Submit Work</button>
+           <button v-if="userRole === 'student' || userRole === 'candidate'" class="submit-btn">
+  Submit Work
+</button>
+
         </div>
       </div>
 

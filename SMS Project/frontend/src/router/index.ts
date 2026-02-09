@@ -20,7 +20,7 @@ const router = createRouter({
     {
       path: "/dashboard",
       name: "dashboard",
-      meta: { requiresAuth: true, roles: ["Student", "Teacher", "Admin"] },
+      meta: { requiresAuth: true, roles: ["Student", "Teacher", "Admin", "Candidate"] },
       component: () => import("../views/DashboardView.vue"),
     },
     {
@@ -51,25 +51,25 @@ const router = createRouter({
     {
       path: "/academic",
       name: "academic",
-      meta: { requiresAuth: true, roles: ["Student", "Teacher", "Admin"] },
+      meta: { requiresAuth: true, roles: ["Student", "Teacher", "Admin", "Candidate"] },
       component: () => import("../views/AcademicView.vue"),
     },
     {
       path: "/academic/:id",
       name: "course-details",
-      meta: { requiresAuth: true, roles: ["Student", "Teacher", "Admin"] },
+      meta: { requiresAuth: true, roles: ["Student", "Teacher", "Admin", "Candidate"] },
       component: () => import("../components/CourseDetailComponent.vue"),
     },
     {
       path: "/academic/subject/:id",
       name: "subject-detail",
-      meta: { requiresAuth: true, roles: ["Student", "Teacher", "Admin"] },
+      meta: { requiresAuth: true, roles: ["Student", "Teacher", "Admin", "Candidate"] },
       component: () => import("../components/SubjectDetailComponent.vue"),
     },
     {
       path: "/examination",
       name: "examination",
-      meta: { requiresAuth: true, roles: ["Teacher", "Admin", "Student"] },
+      meta: { requiresAuth: true, roles: ["Teacher", "Admin", "Student", "Candidate"] },
       component: () => import("../views/ExaminationView.vue"),
     },
     {
@@ -93,13 +93,13 @@ const router = createRouter({
     {
       path: "/candidate-exams",
       name: "candidate-exams",
-      meta: { requiresAuth: true, roles: ["Student"] },
+      meta: { requiresAuth: true, roles: ["Student", "Candidate"] },
       component: () => import("../views/CandidateExamView.vue"),
     },
     {
       path: "/my-results",
       name: "my-results",
-      meta: { requiresAuth: true, roles: ["Student"] },
+      meta: { requiresAuth: true, roles: ["Student", "Candidate"] },
       component: () => import("../views/MyResultsView.vue"),
     },
     {
@@ -116,13 +116,13 @@ const router = createRouter({
     {
       path: "/registration",
       name: "registration",
-      meta: { requiresAuth: true, roles: ["Student"] },
+      meta: { requiresAuth: true, roles: ["Candidate","Student"] },
       component: () => import("../views/RegistrationView.vue"),
     },
     {
       path: "/account",
       name: "account",
-      meta: { requiresAuth: true, roles: ["Student", "Teacher", "Admin"] },
+      meta: { requiresAuth: true, roles: ["Student", "Teacher", "Admin", "Candidate"] },
       component: () => import("../views/AccountView.vue"),
     },
   ],

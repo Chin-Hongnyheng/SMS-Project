@@ -77,7 +77,7 @@ const navItems = [
     path: "/dashboard",
     title: "Dashboard",
     icon: fas.house,
-    roles: ["Admin", "Teacher", "Student"],
+    roles: ["Admin", "Teacher", "Student", "Candidate"],
   },
   {
     path: "/student",
@@ -89,7 +89,7 @@ const navItems = [
     path: "/academic",
     title: "Academic",
     icon: fas.academic,
-    roles: ["Admin", "Teacher", "Student"],
+    roles: ["Admin", "Teacher", "Student", "Candidate"],
   },
   {
     path: "/examination",
@@ -101,13 +101,13 @@ const navItems = [
     path: "/candidate-exams",
     title: "My Exams",
     icon: fas.myExams,
-    roles: ["Student"],
+    roles: ["Student","Candidate"],
   },
   {
     path: "/my-results",
     title: "My Results",
     icon: fas.myResults,
-    roles: ["Student"],
+    roles: ["Student","Candidate"],
   },
   {
     path: "/attendance",
@@ -119,13 +119,13 @@ const navItems = [
     path: "/registration",
     title: "Registration",
     icon: fas.registration,
-    roles: ["Student"],
+    roles: ["Candidate","Student"],
   },
   {
     path: "/account",
     title: "Account",
     icon: fas.account,
-    roles: ["Admin", "Teacher", "Student"],
+    roles: ["Admin", "Teacher", "Student","Candidate"],
   },
 ];
 
