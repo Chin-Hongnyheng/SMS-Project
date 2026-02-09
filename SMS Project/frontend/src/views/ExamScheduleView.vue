@@ -133,7 +133,7 @@
                   :key="type.id"
                   :value="type.id"
                 >
-                  {{ type.name }}
+                  {{ type.name }} {{ type.room ? `(Room: ${type.room})` : "" }}
                 </option>
               </select>
             </div>
@@ -195,14 +195,15 @@
             </div>
 
             <div class="form-group">
-              <label>Room</label>
+              <label>Room (from Exam Type)</label>
               <input
                 v-model="form.room"
                 required
                 type="text"
                 maxlength="100"
                 class="form-control"
-                placeholder="Enter room number/name"
+                readonly
+                placeholder="Select an Exam Type to auto-fill room"
               />
             </div>
 
@@ -265,6 +266,7 @@ import { examTypesService, examSchedulesService } from "@/api/examService";
 interface ExamType {
   id: string;
   name: string;
+  room: string;
 }
 
 interface CourseOption {
@@ -333,6 +335,20 @@ watch(
     filteredSubjects.value = subjects.value.filter(
       (s) => s.courseId === courseId,
     );
+  },
+);
+
+watch(
+  () => form.value.examTypeId,
+  (examTypeId) => {
+    if (!examTypeId) {
+      form.value.room = "";
+      return;
+    }
+    const selectedType = examTypes.value.find((t) => t.id === examTypeId);
+    if (selectedType?.room) {
+      form.value.room = selectedType.room;
+    }
   },
 );
 
