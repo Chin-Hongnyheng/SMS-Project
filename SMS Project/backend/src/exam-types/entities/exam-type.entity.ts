@@ -4,10 +4,15 @@ import {
   Column,
   CreateDateColumn,
   OneToMany,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { ExamSchedule } from '../../exam-schedules/entities/exam-schedule.entity';
+import { Course } from "../../course/entity/course.entity";
+import { Subject } from '../../curriculum/entities/curriculum.entity';
 
 export enum ExamTypeEnum {
+  ENTRANCE_EXAM = 'Entrance Exam',
   MIDTERM = 'Midterm',
   FINAL_SEMESTER = 'Final Semester',
   FINAL_YEAR = 'Final Year',
@@ -45,4 +50,13 @@ export class ExamType {
 
   @OneToMany(() => ExamSchedule, (schedule) => schedule.examType)
   schedules: ExamSchedule[];
+
+  @ManyToOne(() => Course, { nullable: true, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'course_id' })
+  course: Course;
+
+  @ManyToOne(() => Subject, { nullable: true, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'subject_id' })
+  subject: Subject;
+
 }

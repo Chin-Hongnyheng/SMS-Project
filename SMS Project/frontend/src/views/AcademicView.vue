@@ -1,23 +1,18 @@
 <template>
   <div class="academic-container">
   <section class="content-body">
-    <h1 class="page-title">Study Curriculum</h1>
-    <h2 class="section-subtitle">Courses Available</h2>
-
-    <!-- COURSE CARDS GRID -->
-    <div class="course-grid">
-      <div 
-        v-for="course in courses" 
-        :key="course.id" 
-        class="course-card"
-        @click="navigateToCourse(course.id)">
-        <div class="course-icon-bg">
-          <img :src="course.icon" alt="icon" />
-        </div>
-        <div class="course-info">
-          <p class="course-name">{{ course.name }}</p>
-        </div>
-      </div>
+    <div class="courseOption-container">
+          <span class="course-title">Course Available</span>
+          <div class="courseOption-container-inner">
+            <CourseComponent 
+              v-for="course in courseStore.courses"
+              :key="course.id"
+              :courseId="course.id"
+              :courseName="course.courseName"
+              :image="'http://localhost:3000/uploads/courses/' + course.image"
+              @click.native="() => navigateToCourse(course.id)"
+            />
+          </div>
     </div>
   </section>
   </div>
@@ -26,37 +21,24 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import CourseComponent from '@/components/CourseComponent.vue'
+import { useCourseStore } from '@/stores/counter'
 
 const router = useRouter();
 const navigateToCourse = (id) => {
-  router.push({ path: `/curriculum/${id}` });
+  router.push({ path: `/academic/${id}` });
 }
+// ----- STORE -----
+const courseStore = useCourseStore()
+courseStore.fetchCourses()
 
-import B1 from '@/assets/B1.png';
-import B2 from '@/assets/B2.png';
-import B3 from '@/assets/B3.png';
-import B4 from '@/assets/B4.png';
-import B5 from '@/assets/B5.png';
 
-const courses = ref([
-  { id: 1, name: 'Bachelor degree in Nursing and Midwifery', icon: B1},
-  { id: 2, name: 'Associate degree in Nurse', icon: B2 },
-  { id: 3, name: 'Continue Primary Nurse to Associate degree', icon: B3 },
-  { id: 4, name: 'Continue Primary Midwife to Associate degree', icon: B4 },
-  { id: 5, name: 'Continue Primary Nurse to Associate degree', icon: B5 },
-]);
 </script>
 
 <style scoped>
  .academic-container {
   width: 100%;
-  max-width: 1200px;
   margin: 0 auto;
- }
- .page-title {
-   font-size: 28px;
-   font-weight: bold;
-   margin-bottom: 10px;
  }
   .section-subtitle {
     font-size: 25px;
@@ -105,5 +87,28 @@ const courses = ref([
     font-weight: 600;
     color: #333;
   }
-
+.courseOption-container{
+    display:flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: rgb(255, 255, 255);
+    border-radius: 20px;
+    margin: 30px;
+    font-family: 'Nunito';
+    justify-content: center;
+}
+.course-title{
+    font-size: 48px;
+    font-weight: 900;
+    color: rgb(94, 171, 214);
+    margin-top:20px;
+}
+.courseOption-container-inner{
+    display:flex;
+    flex-wrap: wrap;
+    padding: 30px;
+    gap: 70px;
+    align-items: center;
+    justify-content: center;
+}
 </style>

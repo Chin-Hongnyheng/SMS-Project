@@ -9,4 +9,11 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  server: {
+    host: true,
+    watch: {
+      usePolling: true,
+    },
+    port: 5173
+  }
 })

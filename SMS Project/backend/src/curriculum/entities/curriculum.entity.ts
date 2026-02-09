@@ -1,9 +1,17 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { Assignment } from './assignment.entity';
-import { Lecture } from './lecture.entity';
-import { Announcement } from './announcement.entity';
+import {
+  Column,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
+} from "typeorm";
+import { Assignment } from "./assignment.entity";
+import { Lecture } from "./lecture.entity";
+import { Announcement } from "./announcement.entity";
+import { Course } from "../../course/entity/course.entity";
 
-@Entity('subjects')
+@Entity("subjects")
 export class Subject {
   @PrimaryGeneratedColumn()
   id: number;
@@ -11,16 +19,16 @@ export class Subject {
   @Column()
   name: string;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ type: "text", nullable: true })
   description: string;
 
   @Column()
   code: string;
 
-  @Column({ type: 'int' })
+  @Column({ type: "int" })
   lectureHours: number;
 
-  @Column({ type: 'int' })
+  @Column({ type: "int" })
   labHours: number;
 
   @Column()
@@ -29,8 +37,9 @@ export class Subject {
   @Column()
   semester: number;
 
-  @Column()
-  courseName: string;
+  @ManyToOne(() => Course, { nullable: false, onDelete: "CASCADE" })
+  @JoinColumn({ name: "course_id" })
+  course: Course;
 
   @OneToMany(() => Assignment, (assignment) => assignment.subject)
   assignments: Assignment[];

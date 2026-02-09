@@ -4,6 +4,7 @@ import {
   IsString,
   MaxLength,
   MinLength,
+  IsNumber,
 } from 'class-validator';
 import { ExamTypeEnum, ExamTypeStatus } from '../entities/exam-type.entity';
 
@@ -25,4 +26,12 @@ export class UpdateExamTypeDto {
   })
   @IsOptional()
   status?: ExamTypeStatus;
+
+  @IsNumber()
+  @IsOptional()
+  courseId?: number;
+
+  @IsNumber()
+  @IsOptional()
+  subjectId?: number;
 }

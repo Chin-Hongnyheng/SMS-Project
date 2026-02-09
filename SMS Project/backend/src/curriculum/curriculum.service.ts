@@ -6,6 +6,7 @@ import { Subject } from './entities/curriculum.entity';
 import { Repository } from 'typeorm';
 import { Lecture } from './entities/lecture.entity';
 import { Announcement } from './entities/announcement.entity';
+import { Course } from '../course/entity/course.entity'
 
 @Injectable()
 export class CurriculumService {
@@ -18,24 +19,60 @@ export class CurriculumService {
 
     @InjectRepository(Announcement)
     private readonly announcementRepository: Repository<Announcement>,
+
+    @InjectRepository(Course)
+  private readonly courseRepository: Repository<Course>,
   ) {}
 
-  async create(createCurriculumDto: CreateCurriculumDto) {
-    const newSubject = this.subjectRepository.create(createCurriculumDto);
-    return await this.subjectRepository.save(newSubject);
+async create(dto: CreateCurriculumDto) {
+  const course = await this.courseRepository.findOne({
+    where: { id: Number(dto.courseId) },
+  });
+
+  if (!course) {
+    throw new NotFoundException('Course not found');
   }
 
-  async findByCourse(courseName: string) {
+  const subject = this.subjectRepository.create({
+    name: dto.name,
+    description: dto.description,
+    code: dto.code,
+    lectureHours: dto.lectureHours,
+    labHours: dto.labHours,
+    year: dto.year,
+    semester: dto.semester,
+    course: course,
+  });
+
+  return await this.subjectRepository.save(subject);
+}
+
+
+  async findByCourse(courseId: number) {
     return await this.subjectRepository.find({
       where: {
-        courseName: courseName,
+        course: { id: courseId },
       },
+      relations: ['course', 'lectures', 'announcements'],
     });
   }
 
+
   async findAll() {
-    return await this.subjectRepository.find();
+    const subjects = await this.subjectRepository.find({ relations: ['course'] });
+    return subjects.map((s) => ({
+      id: s.id,
+      name: s.name,
+      courseId: s.course.id,  // <-- now frontend gets courseId
+      description: s.description,
+      code: s.code,
+      lectureHours: s.lectureHours,
+      labHours: s.labHours,
+      year: s.year,
+      semester: s.semester,
+    }));
   }
+
 
   async findOne(id: number) {
     const subject = await this.subjectRepository.findOne({
@@ -50,16 +87,41 @@ export class CurriculumService {
     return subject;
   }
 
-  async update(id: number, updateCurriculumDto: UpdateCurriculumDto) {
-    const subject = await this.subjectRepository.preload({
-      id: id,
-      ...updateCurriculumDto,
-    });
-    if (!subject) {
-      throw new NotFoundException(`Subject with ID ${id} not found`);
-    }
-    return await this.subjectRepository.save(subject);
+async update(id: number, dto: UpdateCurriculumDto) {
+  const subject = await this.subjectRepository.findOne({
+    where: { id },
+    relations: ['course'],
+  });
+
+  if (!subject) {
+    throw new NotFoundException(`Subject with ID ${id} not found`);
   }
+
+  // ✅ handle course relation
+  if (dto.courseId !== undefined) {
+    const course = await this.courseRepository.findOne({
+      where: { id: dto.courseId },
+    });
+
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+
+    subject.course = course;
+  }
+
+  if (dto.name !== undefined) subject.name = dto.name;
+  if (dto.description !== undefined) subject.description = dto.description;
+  if (dto.code !== undefined) subject.code = dto.code;
+  if (dto.lectureHours !== undefined) subject.lectureHours = dto.lectureHours;
+  if (dto.labHours !== undefined) subject.labHours = dto.labHours;
+  if (dto.year !== undefined) subject.year = dto.year;
+  if (dto.semester !== undefined) subject.semester = dto.semester;
+
+  return await this.subjectRepository.save(subject);
+}
+
+
 
   async remove(id: number) {
     const subject = await this.findOne(id);

@@ -4,8 +4,6 @@ services:
     container_name: SMS-backend
     ports:
       - "3000:3000"
-    # networks:
-    #   - "sms_network"
     depends_on:
       - postgres
     environment:
@@ -24,8 +22,6 @@ services:
     container_name: SMS-frontend
     ports:
       - "5173:5173"
-    # networks:
-    #   - "sms_network"
     depends_on:
       - backend
     volumes:
@@ -41,7 +37,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: sms
     ports:
-      - "5436:5432"
+      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
   auth-service:
@@ -73,7 +69,3 @@ services:
       - ./user-service/.env
 volumes:
   pgdata:
-
-# networks:
-#   sms_network:
-#     driver: bridge

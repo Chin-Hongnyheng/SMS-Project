@@ -42,12 +42,6 @@ const router = createRouter({
       component: () => import('../views/StudentDashboard.vue'),
     },
     {
-      path: '/admission',
-      name: 'admission',
-      meta: { requiresAuth: true, roles: ['Teacher', 'Admin'] },
-      component: () => import('../views/AdmissionView.vue'),
-    },
-    {
       path: '/student',
       name: 'student',
       alias: '/students',
@@ -61,19 +55,15 @@ const router = createRouter({
       component: () => import('../views/AcademicView.vue'),
     },
     {
-      path: '/curriculum',
-      name: 'curriculum',
-      meta: { requiresAuth: true, roles: ['Student', 'Teacher', 'Admin'] },
-      component: () => import('../views/CurriculumView.vue'),
-    },
-    {
-      path: '/curriculum/:id',
+      path: '/academic/:id',
       name: 'course-details',
+      meta: { requiresAuth: true, roles: ['Student', 'Teacher', 'Admin'] },
       component: () => import('../components/CourseDetailComponent.vue'),
     },
     {
-      path: '/curriculum/subject/:id',
+      path: '/academic/subject/:id',
       name: 'subject-detail',
+      meta: { requiresAuth: true, roles: ['Student', 'Teacher', 'Admin'] },
       component: () => import('../components/SubjectDetailComponent.vue'),
     },
     {
@@ -112,22 +102,10 @@ const router = createRouter({
       component: () => import('../views/AttendanceCheckInView.vue'),
     },
     {
-      path: '/transcript',
-      name: 'transcript',
-      meta: { requiresAuth: true, roles: ['Student', 'Teacher', 'Admin'] },
-      component: () => import('../views/TranscriptView.vue'),
-    },
-    {
       path: '/registration',
       name: 'registration',
       meta: { requiresAuth: true, roles: ['Student'] },
       component: () => import('../views/RegistrationView.vue'),
-    },
-    {
-      path: '/report',
-      name: 'report',
-      meta: { requiresAuth: true, roles: ['Teacher', 'Admin', 'Student'] },
-      component: () => import('../views/ReportView.vue'),
     },
     {
       path: '/account',

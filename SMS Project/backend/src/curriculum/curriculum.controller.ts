@@ -27,9 +27,11 @@ export class CurriculumController {
   }
 
   @Get()
-  findAll(@Query('courseName') courseName?: string) {
-    if (courseName) return this.curriculumService.findByCourse(courseName);
+  findAll(@Query('courseId') courseId?: string) {
+    if (courseId) return this.curriculumService.findByCourse(+courseId);
+    return this.curriculumService.findAll();
   }
+
 
   @Get(':id')
   findOne(@Param('id') id: string) {

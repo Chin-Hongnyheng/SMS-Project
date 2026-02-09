@@ -10,7 +10,7 @@
     </div>
 
     <!-- 1. Management Table (visible to admin/teacher) -->
-     <div v-if="userRole !== 'student'" class="table-container">
+    <div v-if="userRole === 'admin' || userRole === 'teacher'" class="table-container">
       <div class="table-header">
         <h3>Subject Management</h3>
         <button @click="showModal = true" class="add-btn">
@@ -78,7 +78,7 @@
              <div v-for="subject in getSubjectsByYear(yearNum)" 
               :key="subject.id"
               class="subject-row clickable"
-              @click="$router.push(`/curriculum/subject/${subject.id}`)"
+              @click="$router.push(`/academic/subject/${subject.id}`)"
               >
                 <div class="sub-info">
                   <span class="sub-code">{{ subject.code }}</span>
@@ -160,6 +160,7 @@ import axios from 'axios';
 import { MdEditor } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
 
+
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faPen, faTrash, faCircleArrowLeft, faChevronUp, faChevronDown } from '@fortawesome/free-solid-svg-icons';
 
@@ -170,7 +171,7 @@ const route = useRoute();
 const courseId = Number(route.params.id);
 const courseName = ref('Loading...');
 const subjects = ref<any[]>([]);
-const userRole = ref('admin'); // Set to 'admin' or 'student'
+const userRole = ref<string | null>(null);
 const activeYear = ref<number | null>(null);
 
 const showModal = ref(false);
@@ -178,6 +179,18 @@ const isEditing = ref(false);
 const currentEditingId = ref<number | null>(null);
 const showDeleteModal = ref(false);
 const subjectToDeleteId = ref<number | null>(null);
+
+  onMounted(() => {
+  // Get the role from sessionStorage
+  const roles = sessionStorage.getItem('roles');
+  if (roles) {
+    const parsedRoles = JSON.parse(roles) as string[];
+    userRole.value = parsedRoles[0] || null; // pick first role
+  }
+
+  courseName.value = courses[courseId] || 'Unknown Course';
+  fetchSubjects();
+});
 
 const courses: Record<number, string> = {
   1: 'Bachelor degree in Nursing and Midwifery',
@@ -188,36 +201,43 @@ const courses: Record<number, string> = {
 };
 
 const newSubject = ref({
-  name: '', code: '', lectureHours: 0, labHours: 0, year: 1, semester: 1, description: '', courseName: ''
+  name: '',
+  code: '',
+  lectureHours: 0,
+  labHours: 0,
+  year: 1,
+  semester: 1,
+  description: '',
+  courseId: courseId,
 });
 
 const fetchSubjects = async () => {
   try {
-    const targetCourse = courses[courseId];
-    
-    // Send the courseName as a query parameter
     const response = await axios.get('http://localhost:3000/curriculum', {
-      params: { courseName: targetCourse }
+      params: { courseId } // send the ID, not name
     });
 
     if (Array.isArray(response.data)) {
       subjects.value = response.data;
-      console.log("Subjects loaded:", subjects.value.length);
     }
+  } catch (error) {
+    console.error('Error fetching subjects:', error);
   }
-    catch (error) {
-  if (axios.isAxiosError(error)) {
-    console.error("Error fetching data:", error.response?.data);
-  } else {
-    console.error("Unexpected error:", error);
-  }
-}
 };
 
 const editSubject = (subject: any) => {
   isEditing.value = true;
   currentEditingId.value = subject.id;
-  newSubject.value = { ...subject };
+  newSubject.value = {
+    name: subject.name,
+    code: subject.code,
+    lectureHours: subject.lectureHours,
+    labHours: subject.labHours,
+    year: subject.year,
+    semester: subject.semester,
+    description: subject.description,
+    courseId: subject.course.id,
+  };
   showModal.value = true;
 };
 
@@ -228,16 +248,27 @@ const closeModal = () => {
 
 const saveSubject = async () => {
   try {
-    newSubject.value.courseName = courses[courseId] ?? '';
+    const payload = {
+      ...newSubject.value,
+      courseId: courseId  // this is used by the backend to find the Course entity
+    };
+
     if (isEditing.value && currentEditingId.value) {
-      await axios.patch(`http://localhost:3000/curriculum/${currentEditingId.value}`, newSubject.value);
+      // PATCH request for editing
+      await axios.patch(`http://localhost:3000/curriculum/${currentEditingId.value}`, payload);
     } else {
-      await axios.post('http://localhost:3000/curriculum', newSubject.value);
+      // POST request for creating
+      await axios.post('http://localhost:3000/curriculum', payload);
     }
+
     closeModal();
-    fetchSubjects();
-  } catch (error) { alert("Error saving"); }
+    fetchSubjects(); // refresh table
+  } catch (error) {
+    console.error('Error saving subject:', error);
+    alert('Failed to save subject');
+  }
 };
+
 
 // 1. This just opens the box
 const confirmDelete = (id: number) => {

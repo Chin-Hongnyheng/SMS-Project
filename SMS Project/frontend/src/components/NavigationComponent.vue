@@ -76,14 +76,11 @@ const isNavActive = (path: string) => {
 
 const navItems = [
   { path: '/dashboard', title: 'Dashboard', icon: fas.house, roles: ['Admin', 'Teacher', 'Student'] },
-  { path: '/admission', title: 'Admission', icon: fas.admissions, roles: ['Admin', 'Teacher'] },
   { path: '/student', title: 'Student', icon: fas.student, roles: ['Admin', 'Teacher'] },
   { path: '/academic', title: 'Academic', icon: fas.academic, roles: ['Admin', 'Teacher', 'Student'] },
   { path: '/examination', title: 'Examination', icon: fas.examination, roles: ['Admin', 'Teacher'] },
   { path: '/attendance', title: 'Attendance', icon: fas.attendance, roles: ['Admin', 'Teacher'] },
-  { path: '/transcript', title: 'Transcript', icon: fas.transcript, roles: ['Admin', 'Teacher', 'Student'] },
   { path: '/registration', title: 'Registration', icon: fas.registration, roles: ['Student'] },
-  { path: '/report', title: 'Report', icon: fas.report, roles: ['Admin', 'Teacher'] },
   { path: '/account', title: 'Account', icon: fas.account, roles: ['Admin', 'Teacher', 'Student'] },
 ]
 

@@ -72,7 +72,7 @@ export class AuthService {
     await this.users.save(user);
 
     // Determine role to assign
-    const roleName = role?.toLowerCase() || 'Student'; // default to 'user'
+    const roleName = role || 'Student';
     const roleEntity = await this.roles.findOne({ where: { name: roleName } });
     if (!roleEntity) {
       throw new BadRequestException(`Role "${roleName}" not found`);

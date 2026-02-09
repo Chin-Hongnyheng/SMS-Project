@@ -6,5 +6,5 @@ export class CreateCurriculumDto {
   labHours: number;
   year: number;
   semester: number;
-  courseName: string;
+  courseId: number;
 }

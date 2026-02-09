@@ -51,7 +51,7 @@
       <div v-if="activeTab === 'lectures'">
         <div class="tab-header">
            <h3>Lecture Notes</h3>
-           <button v-if="userRole === 'teacher'" @click="openLectureModal" class="add-btn">+ Add Lecture</button>
+           <button v-if="userRole === 'teacher' || userRole === 'admin'" @click="openLectureModal" class="add-btn">+ Add Lecture</button>
           <div v-if="showLectureModal" class="modal-overlay">
             <div class="modal-content">
               <h2>Add New Lecture</h2>
@@ -67,6 +67,11 @@
             </div>
           </div>
         </div>
+
+        <div v-if="!(subject?.lectures?.length)" class="empty-state">
+          No Lecture available.
+        </div>
+
         <div v-for="lec in subject.lectures" :key="lec.id" class="item-row">
           <div class="lec-info">
             <font-awesome-icon :icon="['fas', 'file-pdf']" class="file-icon" />
@@ -81,8 +86,13 @@
       <div v-if="activeTab === 'assignments'">
         <div class="tab-header">
            <h3>Course Assignments</h3>
-           <button v-if="userRole === 'teacher'" @click="openAssignModal" class="add-btn">+ Create Assignment</button>
+           <button v-if="userRole === 'teacher' || userRole === 'admin'" @click="openAssignModal" class="add-btn">+ Create Assignment</button>
         </div>
+
+        <div v-if="!(subject?.assignments?.length)" class="empty-state">
+          No assignments available.
+        </div>
+
         <div v-for="asg in subject.assignments" :key="asg.id" class="item-row">
            <div>
              <strong>{{ asg.title }}</strong>
@@ -91,6 +101,8 @@
            <button v-if="userRole === 'student'" class="submit-btn">Submit Work</button>
         </div>
       </div>
+
+
   </div>
   </div>
   <!-- add loading message -->
@@ -111,6 +123,23 @@ import { faPen, faTrash, faCircleArrowLeft, faChevronUp, faChevronDown } from '@
 
 const route = useRoute();
 const subjectId = route.params.id;
+const userRole = ref(null);
+
+onMounted(() => {
+  // Load role from session storage
+  const roles = sessionStorage.getItem('roles');
+  if (roles) {
+    try {
+      const parsedRoles = JSON.parse(roles);
+      if (Array.isArray(parsedRoles) && parsedRoles.length > 0) {
+        userRole.value = parsedRoles[0]; // pick the first role (admin, teacher, or student)
+      }
+    } catch(err) {
+      console.error('Failed to parse roles', err);
+    }
+  }
+  fetchSubjectDetails(); // load data
+});
 
 // Define subject variable
 const subject = ref(null);
@@ -190,7 +219,7 @@ const statusClass = computed(() => {
 });
 
 const activeTab = ref('info');
-const userRole = ref('teacher'); // Toggle to 'student' to test
+
 
 // Form data for adding items
 const showContentModal = ref(false);

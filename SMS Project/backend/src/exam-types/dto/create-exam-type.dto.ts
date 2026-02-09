@@ -4,6 +4,7 @@ import {
   IsString,
   MaxLength,
   MinLength,
+  IsNumber,
 } from 'class-validator';
 import { ExamTypeEnum, ExamTypeStatus } from '../entities/exam-type.entity';
 
@@ -23,4 +24,12 @@ export class CreateExamTypeDto {
     message: 'Status must be either ACTIVE or INACTIVE',
   })
   status: ExamTypeStatus = ExamTypeStatus.ACTIVE;
+
+  @IsNumber()
+  @IsNotEmpty()
+  courseId: number;
+
+  @IsNumber()
+  @IsNotEmpty()
+  subjectId: number;
 }
