@@ -4,7 +4,7 @@
       <h1 class="text-2xl font-bold text-gray-700">Student Management</h1>
     </div>
     <div class="btn-position">
-      <button class="add-btn" @click="showModal = true">+ Add Student</button>
+      <button class="add-btn" @click="openAddStudent">+ Add Student</button>
     </div>
 
     <!-- Filter Bar -->
@@ -20,38 +20,21 @@
 
         <select v-model="filterMajor" @change="fetchStudents">
           <option value="">All Major</option>
-          <option value="Bachelor degree in Nursing and Midwifery">Nursing and Midwifery</option>
-          <option value="Associate degree in Nurse">Associate Nurse</option>
-          <option value="Continue Primary Nurse to Associate degree">Nurse AD</option>
-          <option value="Continue Primary Midwife to Associate degree">Midwife AD</option>
-          <option value="Associate degree in Midwifery">Midwifery AD</option>
-        </select>
-
-        <select v-model="filterYear" @change="fetchStudents">
-          <option value="">All Year</option>
-          <option value="1">Year 1</option>
-          <option value="2">Year 2</option>
-          <option value="3">Year 3</option>
-          <option value="4">Year 4</option>
-          <option value="5">Year 5</option>
-        </select>
-
-        <select v-model="filterGroup" @change="fetchStudents">
-          <option value="">All Group</option>
-          <option value="Group A">Group A</option>
-          <option value="Group B">Group B</option>
+          <option v-for="course in courses" :key="course.id" :value="course.name">
+            {{ course.name }}
+          </option>
         </select>
       </div>
     </div>
 
     <!-- The Custom Frame Component -->
-    <IntakeStudentCard :students="students" @delete="handleDelete" />
+    <IntakeStudentCard :students="students" @delete="handleDelete" @edit="handleEdit" />
 
     <!-- ADD STUDENT MODAL -->
     <div v-if="showModal" class="modal-overlay">
       <div class="modal-content">
         <div class="modal-header">
-          <h2>Add New Student</h2>
+          <h2>{{ isEditing ? 'Edit Student' : 'Add New Student' }}</h2>
           <button class="close-x" @click="showModal = false">×</button>
         </div>
         <div class="form-grid">
@@ -71,8 +54,35 @@
             </select>
           </div>
           <div class="input-item">
+            <label>Course</label>
+            <select v-model.number="modalCourseId">
+              <option v-if="courses.length === 0" value="" disabled>No courses</option>
+              <option v-for="course in courses" :key="course.id" :value="course.id">
+                {{ course.name }}
+              </option>
+            </select>
+          </div>
+          <div class="input-item">
+            <label>Subject</label>
+            <select v-model.number="modalSubjectId">
+              <option v-if="filteredModalSubjects.length === 0" value="" disabled>No subjects</option>
+              <option
+                v-for="subject in filteredModalSubjects"
+                :key="subject.id"
+                :value="subject.id"
+              >
+                {{ subject.name }}
+              </option>
+            </select>
+          </div>
+          <div class="input-item">
             <label>Class</label>
-            <input v-model="newStudent.class" type="text" placeholder="10A" />
+            <select v-model.number="modalClassId">
+              <option v-if="availableClasses.length === 0" value="" disabled>No classes</option>
+              <option v-for="klass in availableClasses" :key="klass.id" :value="klass.id">
+                {{ klass.name }}
+              </option>
+            </select>
           </div>
           <div class="input-item">
             <label>Generation</label>
@@ -93,7 +103,9 @@
         </div>
         <div class="modal-actions">
           <button class="cancel-btn" @click="showModal = false">Cancel</button>
-          <button class="save-btn" @click="submitStudent">Create Student</button>
+          <button class="save-btn" @click="submitStudent">
+            {{ isEditing ? 'Update Student' : 'Create Student' }}
+          </button>
         </div>
       </div>
     </div>
@@ -101,18 +113,46 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import api from '../services/axios'
 import IntakeStudentCard from '../components/IntakeStudentCard.vue'
 
+type CourseOption = { id: number; name: string }
+type ClassOption = {
+  id: number
+  name: string
+  year: number
+  module: string
+  courseId: number | null
+  courseName: string
+  subjectId?: number | null
+}
+type SubjectOption = {
+  id: number
+  name: string
+  code: string
+  description?: string
+  lectureHours: number
+  labHours: number
+  year: number
+  semester: number
+  courseId: number
+}
+
 const students = ref([])
 const showModal = ref(false)
+const isEditing = ref(false)
+const editingId = ref<number | null>(null)
 const searchQuery = ref('')
 const filterGender = ref('')
 const filterClass = ref('')
 const filterMajor = ref('')
-const filterGroup = ref('')
-const filterYear = ref('')
+const courses = ref<CourseOption[]>([])
+const classes = ref<ClassOption[]>([])
+const subjects = ref<SubjectOption[]>([])
+const modalCourseId = ref<number | null>(null)
+const modalSubjectId = ref<number | null>(null)
+const modalClassId = ref<number | null>(null)
 
 const newStudent = ref({
   name: '',
@@ -123,10 +163,168 @@ const newStudent = ref({
   contact: '',
   gender: 'Male',
   exam: '',
-  major: 'Associate degree in Nurse',
-  year: '1',
-  group: 'Group A',
+  major: '',
+  year: 1,
+  group: '',
 })
+
+const resetStudentForm = () => {
+  newStudent.value = {
+    name: '',
+    studentId: '',
+    class: '',
+    generation: '',
+    location: '',
+    contact: '',
+    gender: 'Male',
+    exam: '',
+    major: '',
+    year: 1,
+    group: '',
+  }
+  modalCourseId.value = null
+  modalSubjectId.value = null
+  modalClassId.value = null
+}
+
+const moduleFromSemester = (semester?: number | null) => {
+  if (!semester || semester < 1) return null
+  const label = `Module ${semester}`
+  return label
+}
+
+const filteredModalSubjects = computed(() =>
+  subjects.value.filter(
+    (subject) =>
+      !modalCourseId.value || subject.courseId === modalCourseId.value,
+  ),
+)
+
+const availableClasses = computed(() => {
+  const subject = subjects.value.find((item) => item.id === modalSubjectId.value)
+  const subjectModule = subject ? moduleFromSemester(subject.semester) : null
+  return classes.value.filter((klass) => {
+    if (modalCourseId.value && klass.courseId !== modalCourseId.value) {
+      return false
+    }
+    if (subject) {
+      if (klass.subjectId) {
+        return klass.subjectId === subject.id
+      }
+      if (subject.year && klass.year !== subject.year) return false
+      if (subjectModule && klass.module !== subjectModule) return false
+    }
+    return true
+  })
+})
+
+const applyModalSelections = (options?: { preserveMissing?: boolean }) => {
+  const course = courses.value.find((item) => item.id === modalCourseId.value)
+  const klass = classes.value.find((item) => item.id === modalClassId.value)
+  if (course) {
+    newStudent.value.major = course.name
+  } else if (!options?.preserveMissing) {
+    newStudent.value.major = ''
+  }
+
+  if (klass) {
+    newStudent.value.class = klass.name
+    newStudent.value.year = klass.year
+    newStudent.value.group = klass.name
+  } else if (!options?.preserveMissing) {
+    newStudent.value.class = ''
+    newStudent.value.year = 1
+    newStudent.value.group = ''
+  }
+}
+
+const openAddStudent = () => {
+  isEditing.value = false
+  editingId.value = null
+  resetStudentForm()
+  showModal.value = true
+  if (courses.value.length > 0) {
+    const fromFilter = courses.value.find((c) => c.name === filterMajor.value)
+    modalCourseId.value = fromFilter?.id ?? courses.value[0].id
+  } else {
+    modalCourseId.value = null
+  }
+
+  if (filteredModalSubjects.value.length > 0) {
+    modalSubjectId.value = filteredModalSubjects.value[0].id
+  } else {
+    modalSubjectId.value = null
+  }
+
+  if (availableClasses.value.length > 0) {
+    modalClassId.value = availableClasses.value[0].id
+  } else {
+    modalClassId.value = null
+  }
+  applyModalSelections()
+}
+
+watch(modalCourseId, () => {
+  const subjectOptions = filteredModalSubjects.value
+  const hasSubject = subjectOptions.some((item) => item.id === modalSubjectId.value)
+  if (!hasSubject) {
+    modalSubjectId.value = subjectOptions[0]?.id ?? null
+  }
+  const hasSelection = availableClasses.value.some(
+    (klass) => klass.id === modalClassId.value,
+  )
+  if (!hasSelection) {
+    if (availableClasses.value.length > 0) {
+      modalClassId.value = availableClasses.value[0].id
+    } else {
+      modalClassId.value = null
+    }
+  }
+  applyModalSelections({ preserveMissing: isEditing.value })
+})
+
+watch(modalSubjectId, () => {
+  const hasSelection = availableClasses.value.some(
+    (klass) => klass.id === modalClassId.value,
+  )
+  if (!hasSelection) {
+    if (availableClasses.value.length > 0) {
+      modalClassId.value = availableClasses.value[0].id
+    } else {
+      modalClassId.value = null
+    }
+  }
+  applyModalSelections({ preserveMissing: isEditing.value })
+})
+
+watch(modalClassId, () => {
+  applyModalSelections({ preserveMissing: isEditing.value })
+})
+
+const fetchCourses = async () => {
+  try {
+    const [courseRes, classRes] = await Promise.all([
+      api.get('/attendance/courses'),
+      api.get('/attendance/classes'),
+    ])
+    courses.value = Array.isArray(courseRes.data) ? courseRes.data : []
+    classes.value = Array.isArray(classRes.data) ? classRes.data : []
+  } catch (err) {
+    console.error('Failed to load courses/classes', err)
+    courses.value = []
+    classes.value = []
+  }
+}
+
+const fetchSubjects = async () => {
+  try {
+    const res = await api.get('/curriculum')
+    subjects.value = Array.isArray(res.data) ? res.data : []
+  } catch (err) {
+    console.error('Failed to load subjects', err)
+    subjects.value = []
+  }
+}
 
 const fetchStudents = async () => {
   try {
@@ -135,8 +333,6 @@ const fetchStudents = async () => {
       gender: filterGender.value,
       class: filterClass.value,
       major: filterMajor.value,
-      year: filterYear.value,
-      group: filterGroup.value,
     }
     const res = await api.get('/students', { params })
     students.value = res.data
@@ -145,25 +341,62 @@ const fetchStudents = async () => {
   }
 }
 
+const handleEdit = async (student: any) => {
+  if (courses.value.length === 0 || classes.value.length === 0 || subjects.value.length === 0) {
+    await Promise.all([fetchCourses(), fetchSubjects()])
+  }
+  isEditing.value = true
+  editingId.value = student.id
+  showModal.value = true
+
+  newStudent.value = {
+    name: student.name ?? '',
+    studentId: student.studentId ?? '',
+    class: student.class ?? '',
+    generation: student.generation ?? '',
+    location: student.location ?? '',
+    contact: student.contact ?? '',
+    gender: student.gender ?? 'Male',
+    exam: student.exam ?? '',
+    major: student.major ?? '',
+    year: student.year ?? 1,
+    group: student.group ?? '',
+  }
+
+  const courseMatch = courses.value.find((course) => course.name === student.major)
+  modalCourseId.value = courseMatch?.id ?? null
+  const classMatch = classes.value.find(
+    (klass) =>
+      klass.name === student.class &&
+      (!modalCourseId.value || klass.courseId === modalCourseId.value),
+  )
+  modalClassId.value = classMatch?.id ?? null
+  if (classMatch?.subjectId) {
+    modalSubjectId.value = classMatch.subjectId
+  } else {
+    const subjectMatch = subjects.value.find(
+      (subject) =>
+        subject.courseId === modalCourseId.value &&
+        subject.year === (student.year ?? subject.year),
+    )
+    modalSubjectId.value = subjectMatch?.id ?? filteredModalSubjects.value[0]?.id ?? null
+  }
+  applyModalSelections({ preserveMissing: true })
+}
+
 const submitStudent = async () => {
   try {
-    await api.post('/students', newStudent.value)
+    applyModalSelections({ preserveMissing: isEditing.value })
+    if (isEditing.value && editingId.value !== null) {
+      await api.patch(`/students/${editingId.value}`, newStudent.value)
+    } else {
+      await api.post('/students', newStudent.value)
+    }
     showModal.value = false
     fetchStudents()
-    // Reset form
-    newStudent.value = {
-      name: '',
-      studentId: '',
-      class: '',
-      generation: '',
-      location: '',
-      contact: '',
-      gender: 'Male',
-      exam: '',
-      major: '',
-      year: '',
-      group: '',
-    }
+    isEditing.value = false
+    editingId.value = null
+    resetStudentForm()
   } catch (err) {
     alert('Check if Student ID is unique.')
   }
@@ -176,7 +409,11 @@ const handleDelete = async (id: number) => {
   }
 }
 
-onMounted(fetchStudents)
+onMounted(() => {
+  fetchCourses()
+  fetchSubjects()
+  fetchStudents()
+})
 </script>
 <style scoped>
 .page-header {

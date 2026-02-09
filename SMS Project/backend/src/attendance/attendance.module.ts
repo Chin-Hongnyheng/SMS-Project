@@ -7,13 +7,20 @@ import { CurriculumService } from './curriculum.service'
 import { AttendanceRecord, ClassEntity, CurriculumSubject } from './entities'
 import { Course } from '../course/entity/course.entity'
 import { Student } from '../dashboard/students/entities/student.entity'
+import { Subject } from '../curriculum/entities/curriculum.entity'
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Course, ClassEntity, Student, AttendanceRecord, CurriculumSubject]),
+    TypeOrmModule.forFeature([
+      Course,
+      ClassEntity,
+      Student,
+      AttendanceRecord,
+      CurriculumSubject,
+      Subject,
+    ]),
   ],
   controllers: [AttendanceController, CurriculumController],
   providers: [AttendanceService, CurriculumService],
 })
 export class AttendanceModule {}
-

@@ -21,28 +21,38 @@ export class AttendanceController {
   @Post('classes')
   async addClass(
     @Body()
-    body: { name?: string; courseId?: number; year?: number; module?: string },
+    body: {
+      name?: string
+      courseId?: number
+      subjectId?: number
+      year?: number
+      module?: string
+    },
   ) {
-    if (!body?.name && !body?.courseId) {
-      return { error: 'courseId or name is required' }
+    if (!body?.name && !body?.courseId && !body?.subjectId) {
+      return { error: 'courseId, subjectId, or name is required' }
     }
 
-    const year = body.year ? Number(body.year) : 1
-    if (!ALLOWED_YEARS.has(year)) {
+    const year = body.year ? Number(body.year) : undefined
+    if (year !== undefined && !ALLOWED_YEARS.has(year)) {
       return { error: 'year must be between 1 and 5' }
     }
 
-    const moduleRaw = (body.module ?? 'Module 1').trim()
-    const moduleName = ALLOWED_MODULES.find(
-      (value) => value.toLowerCase() === moduleRaw.toLowerCase(),
-    )
-    if (!moduleName) {
-      return { error: 'module must be Module 1-5' }
+    let moduleName: string | undefined
+    if (body.module) {
+      const moduleRaw = body.module.trim()
+      moduleName = ALLOWED_MODULES.find(
+        (value) => value.toLowerCase() === moduleRaw.toLowerCase(),
+      )
+      if (!moduleName) {
+        return { error: 'module must be Module 1-5' }
+      }
     }
 
     return this.attendanceService.addClass({
       name: body.name,
       courseId: body.courseId,
+      subjectId: body.subjectId,
       year,
       module: moduleName,
     })

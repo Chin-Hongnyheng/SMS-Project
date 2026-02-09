@@ -61,6 +61,11 @@ export class StudentsService {
     return await this.studentRepository.delete(id);
   }
 
+  async update(id: number, data: Partial<Student>) {
+    await this.studentRepository.update(id, data);
+    return this.findOne(id);
+  }
+
   findOne(id: number) {
     return this.studentRepository.findOneBy({ id });
   }

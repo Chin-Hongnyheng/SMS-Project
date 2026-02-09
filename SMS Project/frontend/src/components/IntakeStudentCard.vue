@@ -8,7 +8,6 @@
       <span class="header-item">Student</span>
       <span class="header-item">Student ID</span>
       <span class="header-item">Group</span>
-      <span class="header-item">Year</span>
       <span class="header-item">Major</span>
       <span class="header-item">Contact</span>
       <span class="header-item">Action</span>
@@ -21,11 +20,10 @@
         <span class="data-item font-bold">{{ student.name }}</span>
         <span class="data-item">{{ student.studentId }}</span>
         <span class="data-item">{{ student.group }}</span>
-        <span class="data-item">{{ student.year }}</span>
         <span class="data-item">{{ student.major }}</span>
         <span class="data-item">{{ student.contact }}</span>
         <span class="data-item">
-          <button class="action-btn edit">Edit</button>
+          <button class="action-btn edit" @click="$emit('edit', student)">Edit</button>
           <button class="action-btn delete" @click="$emit('delete', student.id)">Delete</button>
         </span>
       </div>
@@ -36,7 +34,7 @@
 
 <script setup lang="ts">
 defineProps<{ students: any[] }>();
-defineEmits(['delete']);
+defineEmits(['delete', 'edit']);
 </script>
 
 <style scoped>

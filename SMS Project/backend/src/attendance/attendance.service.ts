@@ -4,6 +4,7 @@ import { Between, FindOptionsWhere, Repository } from 'typeorm'
 import { AttendanceRecord, ClassEntity } from './entities'
 import { Course } from '../course/entity/course.entity'
 import { Student } from '../dashboard/students/entities/student.entity'
+import { Subject } from '../curriculum/entities/curriculum.entity'
 const DEFAULT_COURSE_NAMES = [
   'Bachelor degree in Nursing and Midwifery',
   'Associate degree in Nurse',
@@ -21,6 +22,7 @@ export class AttendanceService {
   constructor(
     @InjectRepository(Course) private readonly courseRepo: Repository<Course>,
     @InjectRepository(ClassEntity) private readonly classRepo: Repository<ClassEntity>,
+    @InjectRepository(Subject) private readonly subjectRepo: Repository<Subject>,
     @InjectRepository(Student) private readonly studentRepo: Repository<Student>,
     @InjectRepository(AttendanceRecord) private readonly attendanceRepo: Repository<AttendanceRecord>,
   ) {}
@@ -89,7 +91,7 @@ export class AttendanceService {
   async ensureDefaultClasses(): Promise<ClassEntity[]> {
     let classes = await this.classRepo.find({
       order: { id: 'ASC' },
-      relations: { course: true },
+      relations: { course: true, subject: true },
     })
 
     if (classes.length === 0) {
@@ -107,7 +109,7 @@ export class AttendanceService {
         }
         classes = await this.classRepo.find({
           order: { id: 'ASC' },
-          relations: { course: true },
+          relations: { course: true, subject: true },
         })
       }
     }
@@ -147,15 +149,33 @@ export class AttendanceService {
       module: item.module,
       courseId: item.course?.id ?? null,
       courseName: item.course?.courseName ?? 'Unknown Course',
+      subjectId: item.subject?.id ?? null,
+      subjectName: item.subject?.name ?? null,
     }))
   }
 
-  async addClass(payload: { name?: string; courseId?: number; year?: number; module?: string }) {
+  async addClass(payload: {
+    name?: string
+    courseId?: number
+    subjectId?: number
+    year?: number
+    module?: string
+  }) {
     const courses = await this.ensureDefaultCourses()
     let course: Course | null = null
+    let subject: Subject | null = null
 
     const courseId = payload.courseId ? Number(payload.courseId) : undefined
-    if (courseId) {
+    if (payload.subjectId) {
+      subject = await this.subjectRepo.findOne({
+        where: { id: Number(payload.subjectId) },
+        relations: { course: true },
+      })
+      if (!subject) {
+        throw new Error('Subject not found')
+      }
+      course = subject.course ?? null
+    } else if (courseId) {
       course = await this.courseRepo.findOne({ where: { id: courseId } })
     }
 
@@ -167,12 +187,18 @@ export class AttendanceService {
       throw new Error('Course not found')
     }
 
-    const year = payload.year ? Number(payload.year) : 1
+    const year = payload.year
+      ? Number(payload.year)
+      : subject?.year
+        ? Number(subject.year)
+        : 1
     if (!ALLOWED_YEARS.has(year)) {
       throw new Error('Year must be between 1 and 5')
     }
 
-    const moduleRaw = payload.module?.trim() || 'Module 1'
+    const moduleRaw =
+      payload.module?.trim() ||
+      (subject ? `Module ${subject.semester}` : 'Module 1')
     const moduleName =
       ALLOWED_MODULES.find((value) => value.toLowerCase() === moduleRaw.toLowerCase()) ?? null
     if (!moduleName) {
@@ -184,8 +210,9 @@ export class AttendanceService {
         course: { id: course.id },
         year,
         module: moduleName,
+        ...(subject ? { subject: { id: subject.id } } : {}),
       },
-      relations: { course: true },
+      relations: { course: true, subject: true },
       order: { id: 'ASC' },
     })
 
@@ -202,6 +229,8 @@ export class AttendanceService {
           module: duplicate.module,
           courseId: duplicate.course?.id ?? null,
           courseName: duplicate.course?.courseName ?? 'Unknown Course',
+          subjectId: duplicate.subject?.id ?? null,
+          subjectName: duplicate.subject?.name ?? null,
         }
       }
     }
@@ -226,6 +255,7 @@ export class AttendanceService {
       course,
       year,
       module: moduleName,
+      subject: subject ?? null,
     })
     const saved = await this.classRepo.save(created)
     return {
@@ -235,6 +265,8 @@ export class AttendanceService {
       module: saved.module,
       courseId: course.id,
       courseName: course.courseName,
+      subjectId: subject?.id ?? null,
+      subjectName: subject?.name ?? null,
     }
   }
 

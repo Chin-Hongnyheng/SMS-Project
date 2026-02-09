@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Delete,
   Param,
   Body,
@@ -47,6 +48,11 @@ export class StudentsController {
   @Post()
   create(@Body() dto: CreateStudentDto) {
     return this.studentsService.create(dto);
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() dto: any) {
+    return this.studentsService.update(+id, dto);
   }
 
   @Delete(':id')

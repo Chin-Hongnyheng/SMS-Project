@@ -13,6 +13,7 @@ type ClassOption = {
   module: string;
   courseId: number | null;
   courseName: string;
+  subjectId?: number | null;
 };
 type StudentRow = { id: string; name: string; presentDays: number[] };
 type SubjectRow = {
@@ -120,6 +121,9 @@ const filteredClasses = computed(() => {
       return false;
     }
     if (subject) {
+      if (item.subjectId) {
+        return item.subjectId === subject.id;
+      }
       if (subject.year && item.year !== subject.year) return false;
       if (subjectModule && item.module !== subjectModule) return false;
     }
@@ -392,6 +396,9 @@ const handleSelectClass = (id: number) => {
   selectedClassId.value = Number.isFinite(id) ? id : null;
   const match = classes.value.find((item) => item.id === id);
   if (match) {
+    if (match.subjectId) {
+      selectedSubjectId.value = match.subjectId;
+    }
     selectedYear.value = match.year;
     selectedModule.value = match.module;
   }
@@ -418,14 +425,24 @@ const submitClass = async () => {
     classError.value = "Select a course first.";
     return;
   }
+  if (!selectedSubjectId.value) {
+    classError.value = "Select a subject first.";
+    return;
+  }
   isCreatingClass.value = true;
   classError.value = "";
+
+  const subject = selectedSubject.value ?? null;
+  const derivedYear = subject?.year ?? selectedYear.value ?? 1;
+  const derivedModule =
+    (moduleFromSemester(subject?.semester ?? null) ?? selectedModule.value) || "Module 1";
 
   const payload = {
     name: classNameInput.value.trim() || undefined,
     courseId: selectedCourseId.value,
-    year: selectedYear.value ?? 1,
-    module: selectedModule.value || "Module 1",
+    subjectId: subject?.id ?? undefined,
+    year: derivedYear,
+    module: derivedModule,
   };
 
   try {
@@ -820,7 +837,7 @@ watch(selectionKey, () => {
           <button
             class="primary"
             type="button"
-            :disabled="!selectedCourseId || isCreatingClass"
+            :disabled="!selectedCourseId || !selectedSubjectId || isCreatingClass"
             @click="submitClass"
           >
             {{ isCreatingClass ? "Saving..." : "Save" }}

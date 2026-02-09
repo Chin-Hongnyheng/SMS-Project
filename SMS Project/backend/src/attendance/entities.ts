@@ -1,6 +1,7 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique } from 'typeorm'
 import { Course } from '../course/entity/course.entity'
 import { Student } from '../dashboard/students/entities/student.entity'
+import { Subject } from '../curriculum/entities/curriculum.entity'
 
 @Entity({ name: 'classes' })
 export class ClassEntity {
@@ -19,6 +20,10 @@ export class ClassEntity {
   @ManyToOne(() => Course, { onDelete: 'CASCADE', nullable: true })
   @JoinColumn({ name: 'course_id' })
   course: Course
+
+  @ManyToOne(() => Subject, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'subject_id' })
+  subject?: Subject | null
 }
 
 @Entity({ name: 'attendance' })
