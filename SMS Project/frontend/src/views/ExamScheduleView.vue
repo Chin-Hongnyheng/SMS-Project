@@ -148,11 +148,10 @@
               </select>
             </div>
 
-            <div class="form-group">
+            <div class="form-group" v-if="!isCandidateExam">
               <label>Subject</label>
               <select
                 v-model="form.subjectId"
-                required
                 class="form-control"
                 :disabled="!filteredSubjects.length"
               >
@@ -260,13 +259,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted, watch, computed } from "vue";
 import { examTypesService, examSchedulesService } from "@/api/examService";
 
 interface ExamType {
   id: string;
   name: string;
   room: string;
+  examFor?: string;
 }
 
 interface CourseOption {
@@ -308,6 +308,14 @@ const successMessage = ref("");
 const errorMessage = ref("");
 const deleteId = ref<string | null>(null);
 
+const isCandidateExam = computed(() => {
+  if (!form.value.examTypeId) return false;
+  const selectedType = examTypes.value.find(
+    (t) => t.id === form.value.examTypeId,
+  );
+  return selectedType?.examFor === "CANDIDATE";
+});
+
 const filters = ref({
   examTypeId: "",
   examDate: "",
@@ -348,6 +356,10 @@ watch(
     const selectedType = examTypes.value.find((t) => t.id === examTypeId);
     if (selectedType?.room) {
       form.value.room = selectedType.room;
+    }
+    // Clear subject for candidate exams
+    if (selectedType?.examFor === "CANDIDATE") {
+      form.value.subjectId = null;
     }
   },
 );
