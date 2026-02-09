@@ -7,43 +7,48 @@ import {
   JoinColumn,
   OneToMany,
   Index,
-} from 'typeorm';
-import { ExamType } from '../../exam-types/entities/exam-type.entity';
-import { ExamResult } from '../../exam-results/entities/exam-result.entity';
+} from "typeorm";
+import { ExamType } from "../../exam-types/entities/exam-type.entity";
+import { ExamResult } from "../../exam-results/entities/exam-result.entity";
+import { Course } from "../../course/entity/course.entity";
+import { Subject } from "../../curriculum/entities/curriculum.entity";
 
 export enum ExamScheduleStatus {
-  SCHEDULED = 'SCHEDULED',
-  COMPLETED = 'COMPLETED',
-  CANCELLED = 'CANCELLED',
+  SCHEDULED = "SCHEDULED",
+  COMPLETED = "COMPLETED",
+  CANCELLED = "CANCELLED",
 }
 
-@Entity('exam_schedules')
-@Index(['examTypeId'])
-@Index(['room', 'examDate', 'startTime'])
+@Entity("exam_schedules")
+@Index(["examTypeId"])
+@Index(["room", "examDate", "startTime"])
 export class ExamSchedule {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn("uuid")
   id: string;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: "uuid" })
   examTypeId: string;
 
-  @Column({ type: 'varchar', length: 255 })
-  subject: string;
+  @Column({ type: "int", nullable: true })
+  courseId: number;
 
-  @Column({ type: 'date' })
+  @Column({ type: "int", nullable: true })
+  subjectId: number;
+
+  @Column({ type: "date" })
   examDate: Date;
 
-  @Column({ type: 'time' })
+  @Column({ type: "time" })
   startTime: string;
 
-  @Column({ type: 'time' })
+  @Column({ type: "time" })
   endTime: string;
 
-  @Column({ type: 'varchar', length: 100 })
+  @Column({ type: "varchar", length: 100 })
   room: string;
 
   @Column({
-    type: 'enum',
+    type: "enum",
     enum: ExamScheduleStatus,
     default: ExamScheduleStatus.SCHEDULED,
   })
@@ -53,10 +58,18 @@ export class ExamSchedule {
   createdAt: Date;
 
   @ManyToOne(() => ExamType, (examType) => examType.schedules, {
-    onDelete: 'CASCADE',
+    onDelete: "CASCADE",
   })
-  @JoinColumn({ name: 'examTypeId' })
+  @JoinColumn({ name: "examTypeId" })
   examType: ExamType;
+
+  @ManyToOne(() => Course, { nullable: true, onDelete: "SET NULL" })
+  @JoinColumn({ name: "courseId" })
+  course: Course;
+
+  @ManyToOne(() => Subject, { nullable: true, onDelete: "SET NULL" })
+  @JoinColumn({ name: "subjectId" })
+  subject: Subject;
 
   @OneToMany(() => ExamResult, (result) => result.examSchedule)
   results: ExamResult[];

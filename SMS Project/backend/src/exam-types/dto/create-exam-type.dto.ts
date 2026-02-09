@@ -4,16 +4,20 @@ import {
   IsString,
   MaxLength,
   MinLength,
-  IsNumber,
-} from 'class-validator';
-import { ExamTypeEnum, ExamTypeStatus } from '../entities/exam-type.entity';
+  IsOptional,
+} from "class-validator";
+import { ExamTypeStatus } from "../entities/exam-type.entity";
 
 export class CreateExamTypeDto {
-  @IsEnum(ExamTypeEnum, {
-    message: 'Name must be one of: Midterm, Final Semester, Final Year',
-  })
+  @IsString()
   @IsNotEmpty()
-  name: ExamTypeEnum;
+  @MaxLength(100)
+  name: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(100)
+  room?: string;
 
   @IsString()
   @MinLength(5)
@@ -21,15 +25,7 @@ export class CreateExamTypeDto {
   description: string;
 
   @IsEnum(ExamTypeStatus, {
-    message: 'Status must be either ACTIVE or INACTIVE',
+    message: "Status must be either ACTIVE or INACTIVE",
   })
   status: ExamTypeStatus = ExamTypeStatus.ACTIVE;
-
-  @IsNumber()
-  @IsNotEmpty()
-  courseId: number;
-
-  @IsNumber()
-  @IsNotEmpty()
-  subjectId: number;
 }

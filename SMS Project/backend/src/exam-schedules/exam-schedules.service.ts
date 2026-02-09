@@ -2,13 +2,13 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between, LessThan, MoreThan } from 'typeorm';
-import { ExamSchedule } from './entities/exam-schedule.entity';
-import { CreateExamScheduleDto } from './dto/create-exam-schedule.dto';
-import { UpdateExamScheduleDto } from './dto/update-exam-schedule.dto';
-import { ExamTypesService } from '../exam-types/exam-types.service';
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository, Between, LessThan, MoreThan } from "typeorm";
+import { ExamSchedule } from "./entities/exam-schedule.entity";
+import { CreateExamScheduleDto } from "./dto/create-exam-schedule.dto";
+import { UpdateExamScheduleDto } from "./dto/update-exam-schedule.dto";
+import { ExamTypesService } from "../exam-types/exam-types.service";
 
 @Injectable()
 export class ExamSchedulesService {
@@ -55,21 +55,25 @@ export class ExamSchedulesService {
     examTypeId?: string,
     examDate?: string,
   ): Promise<{ data: ExamSchedule[]; total: number }> {
-    const query = this.examScheduleRepository.createQueryBuilder('schedule');
+    const query = this.examScheduleRepository
+      .createQueryBuilder("schedule")
+      .leftJoinAndSelect("schedule.examType", "examType")
+      .leftJoinAndSelect("schedule.course", "course")
+      .leftJoinAndSelect("schedule.subject", "subject");
 
     if (examTypeId) {
-      query.andWhere('schedule.examTypeId = :examTypeId', { examTypeId });
+      query.andWhere("schedule.examTypeId = :examTypeId", { examTypeId });
     }
 
     if (examDate) {
-      query.andWhere('schedule.examDate = :examDate', { examDate });
+      query.andWhere("schedule.examDate = :examDate", { examDate });
     }
 
     query
       .skip(skip)
       .take(take)
-      .orderBy('schedule.examDate', 'ASC')
-      .addOrderBy('schedule.startTime', 'ASC');
+      .orderBy("schedule.examDate", "ASC")
+      .addOrderBy("schedule.startTime", "ASC");
 
     const [data, total] = await query.getManyAndCount();
     return { data, total };
@@ -81,7 +85,7 @@ export class ExamSchedulesService {
   async findOne(id: string): Promise<ExamSchedule> {
     const schedule = await this.examScheduleRepository.findOne({
       where: { id },
-      relations: ['examType', 'results'],
+      relations: ["examType", "course", "subject", "results"],
     });
 
     if (!schedule) {
@@ -145,7 +149,7 @@ export class ExamSchedulesService {
     // Check if schedule has results
     if (schedule.results && schedule.results.length > 0) {
       throw new BadRequestException(
-        'Cannot delete exam schedule with existing results. Delete results first.',
+        "Cannot delete exam schedule with existing results. Delete results first.",
       );
     }
 
@@ -164,10 +168,10 @@ export class ExamSchedulesService {
     excludeId?: string,
   ): Promise<ExamSchedule | null> {
     const query = this.examScheduleRepository
-      .createQueryBuilder('schedule')
-      .where('schedule.room = :room', { room })
-      .andWhere('schedule.examDate = :examDate', { examDate })
-      .andWhere('schedule.status != :cancelled', { cancelled: 'CANCELLED' });
+      .createQueryBuilder("schedule")
+      .where("schedule.room = :room", { room })
+      .andWhere("schedule.examDate = :examDate", { examDate })
+      .andWhere("schedule.status != :cancelled", { cancelled: "CANCELLED" });
 
     // Time overlap logic: NOT (new.end <= existing.start OR new.start >= existing.end)
     // PostgreSQL uses direct time comparison (cast string to time type)
@@ -181,7 +185,7 @@ export class ExamSchedulesService {
     );
 
     if (excludeId) {
-      query.andWhere('schedule.id != :excludeId', { excludeId });
+      query.andWhere("schedule.id != :excludeId", { excludeId });
     }
 
     return await query.getOne();

@@ -5,18 +5,22 @@ import {
   IsDateString,
   IsUUID,
   IsEnum,
-} from 'class-validator';
-import { ExamScheduleStatus } from '../entities/exam-schedule.entity';
+  IsNumber,
+} from "class-validator";
+import { ExamScheduleStatus } from "../entities/exam-schedule.entity";
 
 export class UpdateExamScheduleDto {
   @IsUUID()
   @IsOptional()
   examTypeId?: string;
 
-  @IsString()
-  @MaxLength(255)
+  @IsNumber()
   @IsOptional()
-  subject?: string;
+  courseId?: number;
+
+  @IsNumber()
+  @IsOptional()
+  subjectId?: number;
 
   @IsDateString()
   @IsOptional()

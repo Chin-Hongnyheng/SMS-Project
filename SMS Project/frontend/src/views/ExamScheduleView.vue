@@ -25,7 +25,11 @@
       <div class="filter-grid">
         <div class="form-group">
           <label>Filter by Exam Type</label>
-          <select v-model="filters.examTypeId" @change="fetchSchedules" class="form-control">
+          <select
+            v-model="filters.examTypeId"
+            @change="fetchSchedules"
+            class="form-control"
+          >
             <option value="">All Types</option>
             <option v-for="type in examTypes" :key="type.id" :value="type.id">
               {{ type.name }}
@@ -60,6 +64,7 @@
       <table class="data-table">
         <thead>
           <tr>
+            <th>Course</th>
             <th>Subject</th>
             <th>Exam Type</th>
             <th>Date & Time</th>
@@ -71,28 +76,41 @@
         <tbody>
           <tr v-for="schedule in schedules" :key="schedule.id">
             <td>
-              <strong>{{ schedule.subject }}</strong>
+              <strong>{{ schedule.course?.courseName || "-" }}</strong>
             </td>
-            <td>{{ schedule.examType?.name || 'N/A' }}</td>
+            <td>{{ schedule.subject?.name || "-" }}</td>
+            <td>{{ schedule.examType?.name || "N/A" }}</td>
             <td>
               {{ formatDate(schedule.examDate) }}<br />
-              <span class="time-range">{{ schedule.startTime }} - {{ schedule.endTime }}</span>
+              <span class="time-range"
+                >{{ schedule.startTime }} - {{ schedule.endTime }}</span
+              >
             </td>
             <td>{{ schedule.room }}</td>
             <td>
-              <span :class="['status-badge', 'status-' + schedule.status.toLowerCase()]">
+              <span
+                :class="[
+                  'status-badge',
+                  'status-' + schedule.status.toLowerCase(),
+                ]"
+              >
                 {{ schedule.status }}
               </span>
             </td>
             <td class="actions">
-              <button @click="editSchedule(schedule)" class="action-link edit">Edit</button>
-              <button @click="deleteSchedule(schedule.id)" class="action-link delete">
+              <button @click="editSchedule(schedule)" class="action-link edit">
+                Edit
+              </button>
+              <button
+                @click="deleteSchedule(schedule.id)"
+                class="action-link delete"
+              >
                 Delete
               </button>
             </td>
           </tr>
           <tr v-if="schedules.length === 0">
-            <td colspan="6" class="empty-state">No exam schedules found.</td>
+            <td colspan="7" class="empty-state">No exam schedules found.</td>
           </tr>
         </tbody>
       </table>
@@ -102,7 +120,7 @@
     <teleport to="body">
       <div v-if="showModal" class="modal-overlay">
         <div class="modal-box modal-large">
-          <h2>{{ isEditing ? 'Edit Exam Schedule' : 'Schedule New Exam' }}</h2>
+          <h2>{{ isEditing ? "Edit Exam Schedule" : "Schedule New Exam" }}</h2>
 
           <!-- Form -->
           <form @submit.prevent="submitForm">
@@ -110,37 +128,69 @@
               <label>Exam Type</label>
               <select v-model="form.examTypeId" required class="form-control">
                 <option value="">Select Exam Type</option>
-                <option v-for="type in examTypes" :key="type.id" :value="type.id">
+                <option
+                  v-for="type in examTypes"
+                  :key="type.id"
+                  :value="type.id"
+                >
                   {{ type.name }}
                 </option>
               </select>
             </div>
 
             <div class="form-group">
+              <label>Course</label>
+              <select v-model="form.courseId" required class="form-control">
+                <option :value="null">Select Course</option>
+                <option v-for="c in courses" :key="c.id" :value="c.id">
+                  {{ c.name }}
+                </option>
+              </select>
+            </div>
+
+            <div class="form-group">
               <label>Subject</label>
-              <input
-                v-model="form.subject"
+              <select
+                v-model="form.subjectId"
                 required
-                type="text"
-                maxlength="255"
                 class="form-control"
-                placeholder="Enter subject name"
-              />
+                :disabled="!filteredSubjects.length"
+              >
+                <option :value="null">Select Subject</option>
+                <option v-for="s in filteredSubjects" :key="s.id" :value="s.id">
+                  {{ s.name }}
+                </option>
+              </select>
             </div>
 
             <div class="form-group">
               <label>Exam Date</label>
-              <input v-model="form.examDate" required type="date" class="form-control" />
+              <input
+                v-model="form.examDate"
+                required
+                type="date"
+                class="form-control"
+              />
             </div>
 
             <div class="form-row">
               <div class="form-group">
                 <label>Start Time</label>
-                <input v-model="form.startTime" required type="time" class="form-control" />
+                <input
+                  v-model="form.startTime"
+                  required
+                  type="time"
+                  class="form-control"
+                />
               </div>
               <div class="form-group">
                 <label>End Time</label>
-                <input v-model="form.endTime" required type="time" class="form-control" />
+                <input
+                  v-model="form.endTime"
+                  required
+                  type="time"
+                  class="form-control"
+                />
               </div>
             </div>
 
@@ -168,9 +218,15 @@
             <!-- Form Actions -->
             <div class="form-actions">
               <button type="submit" class="btn btn-primary">
-                {{ isEditing ? 'Update' : 'Schedule' }}
+                {{ isEditing ? "Update" : "Schedule" }}
               </button>
-              <button type="button" @click="closeModal()" class="btn btn-secondary">Cancel</button>
+              <button
+                type="button"
+                @click="closeModal()"
+                class="btn btn-secondary"
+              >
+                Cancel
+              </button>
             </div>
           </form>
         </div>
@@ -182,10 +238,19 @@
       <div v-if="showDeleteConfirm" class="modal-overlay">
         <div class="modal-box">
           <h3>Delete Schedule</h3>
-          <p class="confirm-text">Are you sure? This action cannot be undone.</p>
+          <p class="confirm-text">
+            Are you sure? This action cannot be undone.
+          </p>
           <div class="form-actions">
-            <button @click="confirmDelete()" class="btn btn-danger">Delete</button>
-            <button @click="showDeleteConfirm = false" class="btn btn-secondary">Cancel</button>
+            <button @click="confirmDelete()" class="btn btn-danger">
+              Delete
+            </button>
+            <button
+              @click="showDeleteConfirm = false"
+              class="btn btn-secondary"
+            >
+              Cancel
+            </button>
           </div>
         </div>
       </div>
@@ -194,148 +259,215 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { examTypesService, examSchedulesService } from '@/api/examService'
+import { ref, onMounted, watch } from "vue";
+import { examTypesService, examSchedulesService } from "@/api/examService";
 
 interface ExamType {
-  id: string
-  name: string
+  id: string;
+  name: string;
+}
+
+interface CourseOption {
+  id: number;
+  name: string;
+}
+
+interface SubjectOption {
+  id: number;
+  name: string;
+  courseId: number;
 }
 
 interface ExamSchedule {
-  id: string
-  examTypeId: string
-  subject: string
-  examDate: string
-  startTime: string
-  endTime: string
-  room: string
-  status: string
-  examType?: ExamType
+  id: string;
+  examTypeId: string;
+  courseId: number | null;
+  subjectId: number | null;
+  examDate: string;
+  startTime: string;
+  endTime: string;
+  room: string;
+  status: string;
+  examType?: ExamType;
+  course?: any;
+  subject?: any;
 }
 
-const schedules = ref<ExamSchedule[]>([])
-const examTypes = ref<ExamType[]>([])
-const loading = ref(false)
-const showModal = ref(false)
-const showDeleteConfirm = ref(false)
-const isEditing = ref(false)
-const successMessage = ref('')
-const errorMessage = ref('')
-const deleteId = ref<string | null>(null)
+const schedules = ref<ExamSchedule[]>([]);
+const examTypes = ref<ExamType[]>([]);
+const courses = ref<CourseOption[]>([]);
+const subjects = ref<SubjectOption[]>([]);
+const filteredSubjects = ref<SubjectOption[]>([]);
+const loading = ref(false);
+const showModal = ref(false);
+const showDeleteConfirm = ref(false);
+const isEditing = ref(false);
+const successMessage = ref("");
+const errorMessage = ref("");
+const deleteId = ref<string | null>(null);
 
 const filters = ref({
-  examTypeId: '',
-  examDate: '',
-})
+  examTypeId: "",
+  examDate: "",
+});
 
 const form = ref({
-  examTypeId: '',
-  subject: '',
-  examDate: '',
-  startTime: '',
-  endTime: '',
-  room: '',
-  status: 'SCHEDULED',
-})
+  examTypeId: "",
+  courseId: null as number | null,
+  subjectId: null as number | null,
+  examDate: "",
+  startTime: "",
+  endTime: "",
+  room: "",
+  status: "SCHEDULED",
+});
 
-onMounted(() => {
-  loadExamTypes()
-  fetchSchedules()
-})
+watch(
+  () => form.value.courseId,
+  (courseId) => {
+    form.value.subjectId = null;
+    if (!courseId) {
+      filteredSubjects.value = [];
+      return;
+    }
+    filteredSubjects.value = subjects.value.filter(
+      (s) => s.courseId === courseId,
+    );
+  },
+);
+
+onMounted(async () => {
+  await fetchCourses();
+  await fetchSubjects();
+  await loadExamTypes();
+  await fetchSchedules();
+});
+
+async function fetchCourses() {
+  const res = await fetch("http://localhost:3000/courses");
+  const data = await res.json();
+  courses.value = data.map((c: any) => ({
+    id: Number(c.id),
+    name: c.courseName,
+  }));
+}
+
+async function fetchSubjects() {
+  const res = await fetch("http://localhost:3000/curriculum");
+  const data = await res.json();
+  subjects.value = data.map((s: any) => ({
+    id: Number(s.id),
+    name: s.name,
+    courseId: Number(s.courseId) || null,
+  }));
+}
 
 async function loadExamTypes() {
   try {
-    const response = await examTypesService.getAll(0, 100)
-    examTypes.value = response.data
+    const response = await examTypesService.getAll(0, 100);
+    examTypes.value = response.data;
   } catch (error) {
-    console.error('Failed to load exam types')
+    console.error("Failed to load exam types");
   }
 }
 
 async function fetchSchedules() {
-  loading.value = true
+  loading.value = true;
   try {
     const response = await examSchedulesService.getAll(
       0,
       100,
       filters.value.examTypeId || undefined,
       filters.value.examDate || undefined,
-    )
-    schedules.value = response.data
+    );
+    schedules.value = response.data;
   } catch (error: any) {
-    errorMessage.value = error.response?.data?.message || 'Failed to load schedules'
+    errorMessage.value =
+      error.response?.data?.message || "Failed to load schedules";
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
 function clearFilters() {
-  filters.value = { examTypeId: '', examDate: '' }
-  fetchSchedules()
+  filters.value = { examTypeId: "", examDate: "" };
+  fetchSchedules();
 }
 
 function openModal() {
-  isEditing.value = false
+  isEditing.value = false;
   form.value = {
-    examTypeId: '',
-    subject: '',
-    examDate: '',
-    startTime: '',
-    endTime: '',
-    room: '',
-    status: 'SCHEDULED',
-  }
-  showModal.value = true
+    examTypeId: "",
+    courseId: null,
+    subjectId: null,
+    examDate: "",
+    startTime: "",
+    endTime: "",
+    room: "",
+    status: "SCHEDULED",
+  };
+  filteredSubjects.value = [];
+  showModal.value = true;
 }
 
 function editSchedule(schedule: ExamSchedule) {
-  isEditing.value = true
-  form.value = { ...schedule }
-  showModal.value = true
+  isEditing.value = true;
+  form.value = {
+    ...(schedule as any),
+    courseId: schedule.course?.id ? Number(schedule.course.id) : null,
+    subjectId: schedule.subject?.id ? Number(schedule.subject.id) : null,
+  };
+  if (form.value.courseId) {
+    filteredSubjects.value = subjects.value.filter(
+      (s) => s.courseId === form.value.courseId,
+    );
+  }
+  showModal.value = true;
 }
 
 function closeModal() {
-  showModal.value = false
+  showModal.value = false;
 }
 
 async function submitForm() {
   try {
     if (isEditing.value && (form.value as any).id) {
-      await examSchedulesService.update((form.value as any).id, form.value)
-      successMessage.value = 'Schedule updated successfully'
+      await examSchedulesService.update((form.value as any).id, form.value);
+      successMessage.value = "Schedule updated successfully";
     } else {
-      await examSchedulesService.create(form.value)
-      successMessage.value = 'Schedule created successfully'
+      await examSchedulesService.create(form.value);
+      successMessage.value = "Schedule created successfully";
     }
-    closeModal()
-    await fetchSchedules()
-    setTimeout(() => (successMessage.value = ''), 3000)
+    closeModal();
+    await fetchSchedules();
+    setTimeout(() => (successMessage.value = ""), 3000);
   } catch (error: any) {
-    errorMessage.value = error.response?.data?.message || 'Failed to save schedule'
+    errorMessage.value =
+      error.response?.data?.message || "Failed to save schedule";
   }
 }
 
 function deleteSchedule(id: string) {
-  deleteId.value = id
-  showDeleteConfirm.value = true
+  deleteId.value = id;
+  showDeleteConfirm.value = true;
 }
 
 async function confirmDelete() {
-  if (!deleteId.value) return
+  if (!deleteId.value) return;
   try {
-    await examSchedulesService.delete(deleteId.value)
-    successMessage.value = 'Schedule deleted successfully'
-    await fetchSchedules()
-    showDeleteConfirm.value = false
-    setTimeout(() => (successMessage.value = ''), 3000)
+    await examSchedulesService.delete(deleteId.value);
+    successMessage.value = "Schedule deleted successfully";
+    await fetchSchedules();
+    showDeleteConfirm.value = false;
+    setTimeout(() => (successMessage.value = ""), 3000);
   } catch (error: any) {
-    errorMessage.value = error.response?.data?.message || 'Failed to delete schedule'
+    errorMessage.value =
+      error.response?.data?.message || "Failed to delete schedule";
   }
 }
 
 function formatDate(dateString: string) {
-  return new Date(dateString).toLocaleDateString()
+  return new Date(dateString).toLocaleDateString();
 }
 </script>
 
@@ -345,7 +477,7 @@ function formatDate(dateString: string) {
   padding: 2rem;
   background-color: #f9fafb;
   min-height: 100vh;
-  font-family: 'Nunito', sans-serif;
+  font-family: "Nunito", sans-serif;
 }
 
 /* Header */

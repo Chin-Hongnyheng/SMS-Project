@@ -31,9 +31,8 @@
         <thead>
           <tr>
             <th>Name</th>
+            <th>Room</th>
             <th>Description</th>
-            <th>Course</th>
-            <th>Subject</th>
             <th>Status</th>
             <th>Created</th>
             <th class="actions">Actions</th>
@@ -44,9 +43,8 @@
             <td>
               <strong>{{ examType.name }}</strong>
             </td>
+            <td>{{ examType.room || "-" }}</td>
             <td>{{ examType.description }}</td>
-            <td>{{ getCourseName(examType.courseId) }}</td>
-            <td>{{ getSubjectName(examType.subjectId) }}</td>
             <td>
               <button
                 @click="toggleStatus(examType.id)"
@@ -80,7 +78,7 @@
             </td>
           </tr>
           <tr v-if="examTypes.length === 0">
-            <td colspan="7" class="empty-state">
+            <td colspan="6" class="empty-state">
               No exam types found. Create one to get started.
             </td>
           </tr>
@@ -98,43 +96,25 @@
           <form @submit.prevent="submitForm">
             <div class="form-group">
               <label>Exam Type Name</label>
-              <select v-model="form.name" required class="form-control">
-                <option value="">Select Type</option>
-                <option value="Entrance Exam">Entrance Exam</option>
-                <option value="Midterm">Midterm</option>
-                <option value="Final Semester">Final Semester</option>
-                <option value="Final Year">Final Year</option>
-              </select>
-            </div>
-
-            <!-- Course Select -->
-            <div class="form-group">
-              <label>Course</label>
-              <select v-model="form.courseId" required class="form-control">
-                <option :value="null">Select Course</option>
-                <option v-for="c in courses" :key="c.id" :value="c.id">
-                  {{ c.name }}
-                </option>
-              </select>
-            </div>
-
-            <!-- Subject Select -->
-            <div class="form-group">
-              <label>Subject</label>
-              <select
-                v-model="form.subjectId"
+              <input
+                v-model="form.name"
                 required
+                type="text"
+                maxlength="100"
                 class="form-control"
-                :disabled="!filteredSubjects.length"
-              >
-                <option :value="null">Select Subject</option>
-                <option v-for="s in filteredSubjects" :key="s.id" :value="s.id">
-                  {{ s.name }}
-                </option>
-                <option v-if="filteredSubjects.length === 0" disabled>
-                  No subjects available
-                </option>
-              </select>
+                placeholder="e.g., Midterm, Final, Quiz"
+              />
+            </div>
+
+            <div class="form-group">
+              <label>Room Number</label>
+              <input
+                v-model="form.room"
+                type="text"
+                maxlength="100"
+                class="form-control"
+                placeholder="e.g., Room 101, Hall A"
+              />
             </div>
 
             <div class="form-group">
@@ -202,28 +182,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted } from "vue";
 import { examTypesService } from "@/api/examService";
 
 interface ExamType {
   id: string;
   name: string;
+  room: string;
   description: string;
   status: "ACTIVE" | "INACTIVE";
   createdAt?: string | Date;
-  courseId: number | null;
-  subjectId: number | null;
-}
-
-interface CourseOption {
-  id: number;
-  name: string;
-}
-
-interface SubjectOption {
-  id: number;
-  name: string;
-  courseId: number;
 }
 
 const examTypes = ref<ExamType[]>([]);
@@ -235,80 +203,23 @@ const successMessage = ref("");
 const errorMessage = ref("");
 const deleteId = ref<string | null>(null);
 
-const courses = ref<CourseOption[]>([]);
-const subjects = ref<SubjectOption[]>([]);
-const filteredSubjects = ref<SubjectOption[]>([]);
-
 const form = ref<{
   id?: string;
   name: string;
+  room: string;
   description: string;
   status: string;
-  courseId: number | null;
-  subjectId: number | null;
 }>({
   id: undefined,
   name: "",
+  room: "",
   description: "",
   status: "ACTIVE",
-  courseId: null,
-  subjectId: null,
 });
 
 onMounted(async () => {
-  await fetchCourses();
-  await fetchSubjects();
   await fetchExamTypes();
 });
-
-function getCourseName(courseId: number | string | null) {
-  if (courseId == null) return "-";
-  const course = courses.value.find((c) => c.id === Number(courseId));
-  return course ? course.name : "-";
-}
-
-function getSubjectName(subjectId: number | string | null) {
-  if (subjectId == null) return "-";
-  const subject = subjects.value.find((s) => s.id === Number(subjectId));
-  return subject ? subject.name : "-";
-}
-
-async function fetchCourses() {
-  const res = await fetch("http://localhost:3000/courses");
-  const data = await res.json();
-  console.log("Courses raw:", data);
-  courses.value = data.map((c: any) => ({
-    id: Number(c.id),
-    name: c.courseName,
-  }));
-}
-
-async function fetchSubjects() {
-  const res = await fetch("http://localhost:3000/curriculum");
-  const data = await res.json();
-  console.log("Subjects raw:", data);
-  subjects.value = data.map((s: any) => ({
-    id: Number(s.id),
-    name: s.name,
-    courseId: Number(s.courseId) || null,
-  }));
-}
-
-watch(
-  () => form.value.courseId,
-  (courseId) => {
-    form.value.subjectId = null;
-
-    if (!courseId) {
-      filteredSubjects.value = [];
-      return;
-    }
-
-    filteredSubjects.value = subjects.value.filter(
-      (s) => s.courseId === courseId,
-    );
-  },
-);
 
 async function fetchExamTypes() {
   loading.value = true;
@@ -318,11 +229,10 @@ async function fetchExamTypes() {
     examTypes.value = response.data.map((e: any) => ({
       id: e.id,
       name: e.name,
+      room: e.room || "",
       description: e.description,
       status: e.status,
       createdAt: e.createdAt,
-      courseId: e.course?.id ? Number(e.course.id) : null,
-      subjectId: e.subject?.id ? Number(e.subject.id) : null,
     }));
   } catch (error: any) {
     errorMessage.value =
@@ -336,10 +246,9 @@ function openModal() {
   isEditing.value = false;
   form.value = {
     name: "",
+    room: "",
     description: "",
     status: "ACTIVE",
-    courseId: null,
-    subjectId: null,
   };
   showModal.value = true;
 }
@@ -348,14 +257,12 @@ function editExamType(examType: any) {
   isEditing.value = true;
 
   form.value = {
-    ...examType,
-    courseId: examType.courseId,
-    subjectId: examType.subjectId,
+    id: examType.id,
+    name: examType.name,
+    room: examType.room || "",
+    description: examType.description,
+    status: examType.status,
   };
-
-  filteredSubjects.value = subjects.value.filter(
-    (s) => s.courseId === examType.courseId,
-  );
 
   showModal.value = true;
 }
@@ -364,10 +271,9 @@ function closeModal() {
   showModal.value = false;
   form.value = {
     name: "",
+    room: "",
     description: "",
     status: "ACTIVE",
-    courseId: null,
-    subjectId: null,
   };
 }
 

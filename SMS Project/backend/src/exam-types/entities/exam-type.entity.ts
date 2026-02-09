@@ -4,42 +4,30 @@ import {
   Column,
   CreateDateColumn,
   OneToMany,
-  ManyToOne,
-  JoinColumn,
-} from 'typeorm';
-import { ExamSchedule } from '../../exam-schedules/entities/exam-schedule.entity';
-import { Course } from "../../course/entity/course.entity";
-import { Subject } from '../../curriculum/entities/curriculum.entity';
-
-export enum ExamTypeEnum {
-  ENTRANCE_EXAM = 'Entrance Exam',
-  MIDTERM = 'Midterm',
-  FINAL_SEMESTER = 'Final Semester',
-  FINAL_YEAR = 'Final Year',
-}
+} from "typeorm";
+import { ExamSchedule } from "../../exam-schedules/entities/exam-schedule.entity";
 
 export enum ExamTypeStatus {
-  ACTIVE = 'ACTIVE',
-  INACTIVE = 'INACTIVE',
+  ACTIVE = "ACTIVE",
+  INACTIVE = "INACTIVE",
 }
 
-@Entity('exam_types')
+@Entity("exam_types")
 export class ExamType {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn("uuid")
   id: string;
 
-  @Column({
-    type: 'enum',
-    enum: ExamTypeEnum,
-    default: ExamTypeEnum.MIDTERM,
-  })
-  name: ExamTypeEnum;
+  @Column({ type: "varchar", length: 100 })
+  name: string;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({ type: "varchar", length: 100, nullable: true })
+  room: string;
+
+  @Column({ type: "varchar", length: 255, nullable: true })
   description: string;
 
   @Column({
-    type: 'enum',
+    type: "enum",
     enum: ExamTypeStatus,
     default: ExamTypeStatus.ACTIVE,
   })
@@ -50,13 +38,4 @@ export class ExamType {
 
   @OneToMany(() => ExamSchedule, (schedule) => schedule.examType)
   schedules: ExamSchedule[];
-
-  @ManyToOne(() => Course, { nullable: true, onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'course_id' })
-  course: Course;
-
-  @ManyToOne(() => Subject, { nullable: true, onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'subject_id' })
-  subject: Subject;
-
 }
