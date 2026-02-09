@@ -177,7 +177,7 @@ const submitStudent = async () => {
           </template>
         </label>
         <p v-if="classOptions.length === 0" class="modal-hint">
-          No class found yet for this course/year/module. Create a class first.
+          No class found yet for this course. Create a class first.
         </p>
         <p v-if="formError" class="modal-error">{{ formError }}</p>
       </div>

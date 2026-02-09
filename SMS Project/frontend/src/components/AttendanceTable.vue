@@ -6,28 +6,25 @@ interface Student {
 }
 
 type CourseOption = { id: number; name: string }
+type SubjectOption = { id: number; name: string; code: string }
 type ClassOption = { id: number; label: string }
 
 defineProps<{
   days: number[]
   students: Student[]
   courses: CourseOption[]
+  subjects: SubjectOption[]
   classOptions: ClassOption[]
-  years: number[]
-  modules: string[]
   selectedCourseId: number | null
-  selectedYear: number | null
-  selectedModule: string
+  selectedSubjectId: number | null
   selectedClassId: number | null
   selectedMonth: string
 }>()
 const emit = defineEmits<{
-  (event: 'add-student'): void
   (event: 'add-class'): void
   (event: 'delete-class'): void
   (event: 'select-course', id: number): void
-  (event: 'select-year', value: number): void
-  (event: 'select-module', value: string): void
+  (event: 'select-subject', id: number): void
   (event: 'select-class', id: number): void
   (event: 'select-month', value: string): void
   (event: 'delete-student', id: string): void
@@ -35,15 +32,12 @@ const emit = defineEmits<{
   (event: 'export-pdf'): void
   (event: 'toggle-attendance', payload: { studentId: string; day: number; present: boolean }): void
 }>()
-
-const formatModuleLabel = (value: string) => value.replace(/^module\s*/i, 'Module ')
 </script>
 
 <template>
   <section class="panel">
     <div class="panel-title">
       <div class="title-group">
-        <span class="module-tag">{{ formatModuleLabel(selectedModule) }} Student attendance</span>
         <h1>Student Attendance</h1>
       </div>
       <div class="panel-actions">
@@ -58,25 +52,17 @@ const formatModuleLabel = (value: string) => value.replace(/^module\s*/i, 'Modul
             </option>
           </select>
         </label>
-        <label class="year-select">
-          <span>Year</span>
+        <label class="subject-select">
+          <span>Subject</span>
           <select
-            :value="selectedYear ?? undefined"
-            @change="emit('select-year', Number(($event.target as HTMLSelectElement).value))"
+            :value="selectedSubjectId ?? ''"
+            @change="emit('select-subject', Number(($event.target as HTMLSelectElement).value))"
           >
-            <option v-for="year in years" :key="year" :value="year">
-              Year {{ year }}
+            <option v-if="subjects.length === 0" value="" disabled>
+              No subjects
             </option>
-          </select>
-        </label>
-        <label class="module-select">
-          <span>Module</span>
-          <select
-            :value="selectedModule"
-            @change="emit('select-module', ($event.target as HTMLSelectElement).value)"
-          >
-            <option v-for="moduleValue in modules" :key="moduleValue" :value="moduleValue">
-              {{ formatModuleLabel(moduleValue) }}
+            <option v-for="subject in subjects" :key="subject.id" :value="subject.id">
+              {{ subject.name }} ({{ subject.code }})
             </option>
           </select>
         </label>
@@ -105,7 +91,6 @@ const formatModuleLabel = (value: string) => value.replace(/^module\s*/i, 'Modul
         <button class="ghost export-pdf" type="button" @click="emit('export-pdf')">Export PDF</button>
         <button class="ghost add-class" type="button" @click="emit('add-class')">Add Class</button>
         <button class="ghost delete-class" type="button" @click="emit('delete-class')">Remove Class</button>
-        <button class="add-btn" type="button" @click="emit('add-student')">Add Student</button>
       </div>
     </div>
 
@@ -203,7 +188,7 @@ const formatModuleLabel = (value: string) => value.replace(/^module\s*/i, 'Modul
 }
 
 .class-select,
-.module-select {
+.subject-select {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -214,8 +199,7 @@ const formatModuleLabel = (value: string) => value.replace(/^module\s*/i, 'Modul
 
 .class-select select,
 .course-select select,
-.year-select select,
-.module-select select {
+.subject-select select {
   border: 1px solid #d9dfe7;
   background: #f7f9fc;
   border-radius: 10px;
@@ -226,8 +210,8 @@ const formatModuleLabel = (value: string) => value.replace(/^module\s*/i, 'Modul
 }
 
 .course-select,
-.year-select,
-.module-select {
+.course-select,
+.subject-select {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -274,27 +258,9 @@ const formatModuleLabel = (value: string) => value.replace(/^module\s*/i, 'Modul
   gap: 6px;
 }
 
-.module-tag {
-  font-size: 0.85rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: #5b616b;
-}
-
 .panel-title h1 {
   font-size: 1.5rem;
   margin: 0;
-}
-
-.add-btn {
-  border: none;
-  background: #5ba4d5;
-  color: #ffffff;
-  padding: 10px 18px;
-  border-radius: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 10px 18px rgba(91, 164, 213, 0.28);
 }
 
 .card {

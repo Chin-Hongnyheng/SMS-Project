@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Between, Repository } from 'typeorm'
-import { AttendanceRecord, ClassEntity, CourseEntity, Student } from './entities'
+import { AttendanceRecord, ClassEntity, Student } from './entities'
+import { Course } from '../course/entity/course.entity'
 const DEFAULT_COURSE_NAMES = [
   'Bachelor degree in Nursing and Midwifery',
   'Associate degree in Nurse',
@@ -9,25 +10,26 @@ const DEFAULT_COURSE_NAMES = [
   'Continue Primary Midwife to Associate degree',
   'Continue Primary Nurse to Associate degree',
 ]
+const DEFAULT_COURSE_IMAGE = 'placeholder.png'
 const ALLOWED_YEARS = new Set([1, 2, 3, 4, 5])
 const ALLOWED_MODULES = ['Module 1', 'Module 2', 'Module 3', 'Module 4', 'Module 5']
 
 @Injectable()
 export class AttendanceService {
   constructor(
-    @InjectRepository(CourseEntity) private readonly courseRepo: Repository<CourseEntity>,
+    @InjectRepository(Course) private readonly courseRepo: Repository<Course>,
     @InjectRepository(ClassEntity) private readonly classRepo: Repository<ClassEntity>,
     @InjectRepository(Student) private readonly studentRepo: Repository<Student>,
     @InjectRepository(AttendanceRecord) private readonly attendanceRepo: Repository<AttendanceRecord>,
   ) {}
 
-  async ensureDefaultCourses(): Promise<CourseEntity[]> {
+  async ensureDefaultCourses(): Promise<Course[]> {
     const existingCourses = await this.courseRepo.find({ order: { id: 'ASC' } })
-    const coursesByName = new Map<string, CourseEntity[]>()
+    const coursesByName = new Map<string, Course[]>()
     for (const course of existingCourses) {
-      const list = coursesByName.get(course.name) ?? []
+      const list = coursesByName.get(course.courseName) ?? []
       list.push(course)
-      coursesByName.set(course.name, list)
+      coursesByName.set(course.courseName, list)
     }
 
     const requiredCounts = new Map<string, number>()
@@ -40,7 +42,10 @@ export class AttendanceService {
       const missing = count - list.length
       if (missing > 0) {
         for (let i = 0; i < missing; i += 1) {
-          const newCourse = this.courseRepo.create({ name })
+          const newCourse = this.courseRepo.create({
+            courseName: name,
+            image: DEFAULT_COURSE_IMAGE,
+          })
           const saved = await this.courseRepo.save(newCourse)
           list.push(saved)
         }
@@ -48,7 +53,7 @@ export class AttendanceService {
       }
     }
 
-    const ordered: CourseEntity[] = []
+    const ordered: Course[] = []
     const usedCount = new Map<string, number>()
     for (const name of DEFAULT_COURSE_NAMES) {
       const list = coursesByName.get(name) ?? []
@@ -107,7 +112,7 @@ export class AttendanceService {
 
   async getCourses() {
     const courses = await this.ensureDefaultCourses()
-    return courses.map((course) => ({ id: course.id, name: course.name }))
+    return courses.map((course) => ({ id: course.id, name: course.courseName }))
   }
 
   async getClasses() {
@@ -122,13 +127,13 @@ export class AttendanceService {
       year: item.year,
       module: item.module,
       courseId: item.course?.id ?? null,
-      courseName: item.course?.name ?? 'Unknown Course',
+      courseName: item.course?.courseName ?? 'Unknown Course',
     }))
   }
 
   async addClass(payload: { name?: string; courseId?: number; year?: number; module?: string }) {
     const courses = await this.ensureDefaultCourses()
-    let course: CourseEntity | null = null
+    let course: Course | null = null
 
     const courseId = payload.courseId ? Number(payload.courseId) : undefined
     if (courseId) {
@@ -177,7 +182,7 @@ export class AttendanceService {
           year: duplicate.year,
           module: duplicate.module,
           courseId: duplicate.course?.id ?? null,
-          courseName: duplicate.course?.name ?? 'Unknown Course',
+          courseName: duplicate.course?.courseName ?? 'Unknown Course',
         }
       }
     }
@@ -210,7 +215,7 @@ export class AttendanceService {
       year: saved.year,
       module: saved.module,
       courseId: course.id,
-      courseName: course.name,
+      courseName: course.courseName,
     }
   }
 

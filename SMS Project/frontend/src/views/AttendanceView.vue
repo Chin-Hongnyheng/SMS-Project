@@ -3,7 +3,7 @@ import { computed, onMounted, ref, watch } from "vue";
 import AttendanceTable from "@/components/AttendanceTable.vue";
 import AttendanceScanner from "@/components/AttendanceScanner.vue";
 import AddStudentModal from "@/components/AddStudentModal.vue";
-import { ATTENDANCE_API_BASE_URL } from "@/config/api";
+import { ATTENDANCE_API_BASE_URL, SMS_API_BASE_URL } from "@/config/api";
 
 type CourseOption = { id: number; name: string };
 type ClassOption = {
@@ -15,8 +15,20 @@ type ClassOption = {
   courseName: string;
 };
 type StudentRow = { id: string; name: string; presentDays: number[] };
+type SubjectRow = {
+  id: number;
+  name: string;
+  code: string;
+  description?: string;
+  lectureHours: number;
+  labHours: number;
+  year: number;
+  semester: number;
+  courseId: number;
+};
 
 const apiBaseUrl = ATTENDANCE_API_BASE_URL;
+const smsApiBaseUrl = SMS_API_BASE_URL;
 const YEAR_OPTIONS = [1, 2, 3, 4, 5];
 const MODULE_OPTIONS = [
   "Module 1",
@@ -37,8 +49,10 @@ const courses = ref<CourseOption[]>([]);
 const classes = ref<ClassOption[]>([]);
 const days = ref<number[]>([]);
 const students = ref<StudentRow[]>([]);
+const subjects = ref<SubjectRow[]>([]);
 
 const selectedCourseId = ref<number | null>(null);
+const selectedSubjectId = ref<number | null>(null);
 const selectedYear = ref<number | null>(1);
 const selectedModule = ref("Module 1");
 const selectedClassId = ref<number | null>(null);
@@ -47,6 +61,8 @@ const selectedMonth = ref("");
 const isLoading = ref(false);
 const errorMessage = ref("");
 const isInitialized = ref(false);
+const isLoadingSubjects = ref(false);
+const subjectsError = ref("");
 
 const showStudentModal = ref(false);
 const modalMode = ref<"add" | "edit">("add");
@@ -58,6 +74,12 @@ const isCreatingClass = ref(false);
 
 const formatModuleLabel = (value: string) =>
   value.replace(/^module\s*/i, "Module ");
+
+const moduleFromSemester = (semester?: number | null) => {
+  if (!semester || semester < 1) return null;
+  const label = `Module ${semester}`;
+  return MODULE_OPTIONS.includes(label) ? label : null;
+};
 
 const defaultMonth = () => {
   const now = new Date();
@@ -72,23 +94,38 @@ const courseClasses = computed(() =>
   ),
 );
 
-const availableYears = computed(() => YEAR_OPTIONS);
-
-const availableModules = computed(() => MODULE_OPTIONS);
-
 const selectedCourse = computed(
   () =>
     courses.value.find((item) => item.id === selectedCourseId.value) ?? null,
 );
 
-const filteredClasses = computed(() =>
-  classes.value.filter(
-    (item) =>
-      (!selectedCourseId.value || item.courseId === selectedCourseId.value) &&
-      (!selectedYear.value || item.year === selectedYear.value) &&
-      item.module === selectedModule.value,
+const filteredSubjects = computed(() =>
+  subjects.value.filter(
+    (subject) =>
+      !selectedCourseId.value || subject.courseId === selectedCourseId.value,
   ),
 );
+
+const selectedSubject = computed(
+  () =>
+    subjects.value.find((subject) => subject.id === selectedSubjectId.value) ??
+    null,
+);
+
+const filteredClasses = computed(() => {
+  const subject = selectedSubject.value;
+  const subjectModule = subject ? moduleFromSemester(subject.semester) : null;
+  return classes.value.filter((item) => {
+    if (selectedCourseId.value && item.courseId !== selectedCourseId.value) {
+      return false;
+    }
+    if (subject) {
+      if (subject.year && item.year !== subject.year) return false;
+      if (subjectModule && item.module !== subjectModule) return false;
+    }
+    return true;
+  });
+});
 
 const currentClass = computed(
   () => classes.value.find((item) => item.id === selectedClassId.value) ?? null,
@@ -97,15 +134,12 @@ const currentClass = computed(
 const classLabel = computed(() => {
   const courseName =
     currentClass.value?.courseName ?? selectedCourse.value?.name ?? "Course";
+  const subjectName = selectedSubject.value?.name ?? "Subject";
   if (currentClass.value) {
-    return `${courseName} - Year ${currentClass.value.year} - ${formatModuleLabel(
-      currentClass.value.module,
-    )} - ${currentClass.value.name}`;
+    return `${courseName} - ${subjectName} - ${currentClass.value.name}`;
   }
-  if (selectedYear.value && selectedModule.value) {
-    return `${courseName} - Year ${selectedYear.value} - ${formatModuleLabel(
-      selectedModule.value,
-    )} - No class`;
+  if (selectedSubject.value) {
+    return `${courseName} - ${subjectName} - No class`;
   }
   return `${courseName} - No class selected`;
 });
@@ -127,10 +161,26 @@ const selectedClassLabel = computed(
 
 const selectionKey = computed(
   () =>
-    `${selectedCourseId.value ?? "none"}|${selectedYear.value ?? "none"}|${selectedModule.value}|${
-      selectedClassId.value ?? "none"
-    }|${selectedMonth.value}`,
+    `${selectedCourseId.value ?? "none"}|${selectedSubjectId.value ?? "none"}|${selectedClassId.value ?? "none"}|${selectedMonth.value}`,
 );
+
+const courseNameById = computed(() => {
+  const map = new Map<number, string>();
+  for (const course of courses.value) {
+    map.set(course.id, course.name);
+  }
+  return map;
+});
+
+const resolveCourseName = (courseId?: number | null) =>
+  courseNameById.value.get(courseId ?? -1) ?? "Unknown Course";
+
+const subjectsForDisplay = computed(() => {
+  if (!selectedCourseId.value) return subjects.value;
+  return subjects.value.filter(
+    (subject) => subject.courseId === selectedCourseId.value,
+  );
+});
 
 const hydrateCoursesFromClasses = () => {
   if (courses.value.length > 0) return;
@@ -155,6 +205,30 @@ const syncSelection = () => {
     }
   } else if (!selectedCourseId.value && classes.value.length > 0) {
     selectedCourseId.value = classes.value[0].courseId;
+  }
+
+  const subjectOptions = filteredSubjects.value;
+  if (subjectOptions.length === 0) {
+    selectedSubjectId.value = null;
+  } else if (
+    !selectedSubjectId.value ||
+    !subjectOptions.some((item) => item.id === selectedSubjectId.value)
+  ) {
+    selectedSubjectId.value = subjectOptions[0].id;
+  }
+
+  if (selectedSubjectId.value) {
+    const subject = subjects.value.find(
+      (item) => item.id === selectedSubjectId.value,
+    );
+    if (subject) {
+      selectedYear.value =
+        subject.year ?? selectedYear.value ?? YEAR_OPTIONS[0];
+      const subjectModule = moduleFromSemester(subject.semester);
+      if (subjectModule) {
+        selectedModule.value = subjectModule;
+      }
+    }
   }
 
   if (!selectedYear.value || !YEAR_OPTIONS.includes(selectedYear.value)) {
@@ -230,6 +304,24 @@ const fetchClasses = async () => {
   hydrateCoursesFromClasses();
 };
 
+const fetchSubjects = async () => {
+  isLoadingSubjects.value = true;
+  subjectsError.value = "";
+  try {
+    const response = await fetch(`${smsApiBaseUrl}/curriculum`);
+    if (!response.ok) {
+      throw new Error("Failed to load subjects");
+    }
+    const data = await response.json();
+    subjects.value = Array.isArray(data) ? data : [];
+  } catch (error) {
+    subjectsError.value = "Unable to load subject data.";
+    subjects.value = [];
+  } finally {
+    isLoadingSubjects.value = false;
+  }
+};
+
 const loadAttendance = async () => {
   if (!selectedMonth.value) {
     selectedMonth.value = defaultMonth();
@@ -263,7 +355,7 @@ const loadInitial = async () => {
   isLoading.value = true;
   errorMessage.value = "";
   try {
-    await Promise.all([fetchCourses(), fetchClasses()]);
+    await Promise.all([fetchCourses(), fetchClasses(), fetchSubjects()]);
     hydrateCoursesFromClasses();
     syncSelection();
     await loadAttendance();
@@ -279,18 +371,30 @@ const handleSelectCourse = (id: number) => {
   syncSelection();
 };
 
-const handleSelectYear = (value: number) => {
-  selectedYear.value = value;
-  syncSelection();
-};
-
-const handleSelectModule = (value: string) => {
-  selectedModule.value = value;
+const handleSelectSubject = (id: number) => {
+  selectedSubjectId.value = Number.isFinite(id) ? id : null;
+  if (selectedSubjectId.value) {
+    const subject = subjects.value.find(
+      (item) => item.id === selectedSubjectId.value,
+    );
+    if (subject) {
+      selectedYear.value = subject.year ?? selectedYear.value ?? 1;
+      const subjectModule = moduleFromSemester(subject.semester);
+      if (subjectModule) {
+        selectedModule.value = subjectModule;
+      }
+    }
+  }
   syncSelection();
 };
 
 const handleSelectClass = (id: number) => {
   selectedClassId.value = Number.isFinite(id) ? id : null;
+  const match = classes.value.find((item) => item.id === id);
+  if (match) {
+    selectedYear.value = match.year;
+    selectedModule.value = match.module;
+  }
 };
 
 const handleSelectMonth = (value: string) => {
@@ -580,20 +684,16 @@ watch(selectionKey, () => {
         :days="days"
         :students="students"
         :courses="courses"
+        :subjects="filteredSubjects"
         :class-options="classOptions"
-        :years="availableYears"
-        :modules="availableModules"
         :selected-course-id="selectedCourseId"
-        :selected-year="selectedYear"
-        :selected-module="selectedModule"
+        :selected-subject-id="selectedSubjectId"
         :selected-class-id="selectedClassId"
         :selected-month="selectedMonth"
         @select-course="handleSelectCourse"
-        @select-year="handleSelectYear"
-        @select-module="handleSelectModule"
+        @select-subject="handleSelectSubject"
         @select-class="handleSelectClass"
         @select-month="handleSelectMonth"
-        @add-student="openAddStudent"
         @edit-student="openEditStudent"
         @delete-student="handleDeleteStudent"
         @add-class="openClassModal"
@@ -601,6 +701,70 @@ watch(selectionKey, () => {
         @export-pdf="handleExportPdf"
         @toggle-attendance="handleToggleAttendance"
       />
+
+      <section class="subjects-panel">
+        <div class="subjects-header">
+          <div>
+            <p class="subjects-kicker">Curriculum Subjects</p>
+            <h2>Subject Overview</h2>
+            <p class="subjects-subtitle">
+              {{ selectedCourse?.name || "All courses" }}
+            </p>
+          </div>
+          <div class="subjects-meta">
+            <span>{{ subjectsForDisplay.length }}</span>
+            <span>Subjects</span>
+          </div>
+        </div>
+
+        <p v-if="subjectsError" class="message error">{{ subjectsError }}</p>
+        <div v-else-if="isLoadingSubjects" class="loading">
+          Loading subjects...
+        </div>
+
+        <div v-else class="subjects-table">
+          <div class="subjects-row head">
+            <div class="cell id">ID</div>
+            <div class="cell subject">Subject</div>
+            <div class="cell code">Code</div>
+            <div class="cell course">Course</div>
+            <div class="cell hours">Lecture</div>
+            <div class="cell hours">Lab</div>
+            <div class="cell term">Year</div>
+            <div class="cell term">Semester</div>
+            <div class="cell desc">Description</div>
+          </div>
+
+          <div
+            v-for="subject in subjectsForDisplay"
+            :key="subject.id"
+            class="subjects-row"
+          >
+            <div class="cell id">{{ subject.id }}</div>
+            <div class="cell subject">
+              <span class="subject-name">{{ subject.name }}</span>
+            </div>
+            <div class="cell code">{{ subject.code }}</div>
+            <div class="cell course">
+              <span class="course-name">{{ resolveCourseName(subject.courseId) }}</span>
+              <span class="course-id">#{{ subject.courseId }}</span>
+            </div>
+            <div class="cell hours">{{ subject.lectureHours }}</div>
+            <div class="cell hours">{{ subject.labHours }}</div>
+            <div class="cell term">{{ subject.year }}</div>
+            <div class="cell term">{{ subject.semester }}</div>
+            <div class="cell desc">
+              <span class="subject-desc">
+                {{ subject.description || "No description" }}
+              </span>
+            </div>
+          </div>
+
+          <p v-if="subjectsForDisplay.length === 0" class="subjects-empty">
+            No subjects found for this course.
+          </p>
+        </div>
+      </section>
 
       <AttendanceScanner
         :class-id="currentClass?.id ?? null"
@@ -638,9 +802,9 @@ watch(selectionKey, () => {
               <strong>Course:</strong>
               {{ selectedCourse?.name || "Select a course" }}
             </p>
-            <p><strong>Year:</strong> {{ selectedYear }}</p>
             <p>
-              <strong>Module:</strong> {{ formatModuleLabel(selectedModule) }}
+              <strong>Subject:</strong>
+              {{ selectedSubject?.name || "Select a subject" }}
             </p>
           </div>
           <label class="modal-field">
@@ -706,6 +870,123 @@ watch(selectionKey, () => {
 .attendance-grid {
   display: grid;
   gap: 20px;
+}
+
+.subjects-panel {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 22px 24px 26px;
+  border: 1px solid #eef1f5;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.06);
+  display: grid;
+  gap: 16px;
+}
+
+.subjects-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.subjects-kicker {
+  margin: 0;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #9aa5b1;
+  font-weight: 700;
+}
+
+.subjects-header h2 {
+  margin: 6px 0 2px;
+  font-size: 1.3rem;
+}
+
+.subjects-subtitle {
+  margin: 0;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.subjects-meta {
+  display: grid;
+  justify-items: end;
+  background: #f5f8fc;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-weight: 700;
+  color: #2b2d35;
+  min-width: 120px;
+}
+
+.subjects-meta span:first-child {
+  font-size: 1.2rem;
+}
+
+.subjects-table {
+  display: grid;
+  gap: 10px;
+  overflow: auto;
+  padding-bottom: 4px;
+}
+
+.subjects-row {
+  display: grid;
+  grid-template-columns: 60px 200px 90px 220px 80px 80px 70px 90px minmax(220px, 1fr);
+  gap: 12px;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #edf0f5;
+  border-radius: 12px;
+  padding: 10px 12px;
+  min-width: 980px;
+}
+
+.subjects-row.head {
+  background: #eef4f9;
+  font-weight: 700;
+  color: #1d2a37;
+}
+
+.subjects-row .cell {
+  font-size: 0.9rem;
+  color: #4b5563;
+}
+
+.subjects-row.head .cell {
+  color: #1f2937;
+}
+
+.subject-name {
+  font-weight: 700;
+  color: #243244;
+}
+
+.course-name {
+  font-weight: 600;
+  color: #344256;
+}
+
+.course-id {
+  display: block;
+  font-size: 0.78rem;
+  color: #8a94a6;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.subject-desc {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.subjects-empty {
+  margin: 4px 0 0;
+  color: #6b7280;
+  font-weight: 600;
 }
 
 .loading {
