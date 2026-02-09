@@ -26,57 +26,73 @@
     </div>
 
     <!-- Table -->
-  <div v-else class="table-container">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Description</th>
-          <th>Course</th>    
-          <th>Subject</th>   
-          <th>Status</th>
-          <th>Created</th>
-          <th class="actions">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="examType in examTypes" :key="examType.id">
-          <td><strong>{{ examType.name }}</strong></td>
-          <td>{{ examType.description }}</td>
-          <td>{{ getCourseName(examType.courseId) }}</td>
-          <td>{{ getSubjectName(examType.subjectId) }}</td>
-          <td>
-            <button
-              @click="toggleStatus(examType.id)"
-              :class="[
-                'status-badge',
-                examType.status === 'ACTIVE' ? 'status-active' : 'status-inactive',
-              ]"
-            >
-              {{ examType.status }}
-            </button>
-          </td>
-          <td>
-            {{ examType.createdAt ? new Date(examType.createdAt).toLocaleDateString() : '-' }}
-          </td>
-          <td class="actions">
-            <button @click="editExamType(examType)" class="action-link edit">Edit</button>
-            <button @click="deleteExamType(examType.id)" class="action-link delete">Delete</button>
-          </td>
-        </tr>
-        <tr v-if="examTypes.length === 0">
-          <td colspan="7" class="empty-state">No exam types found. Create one to get started.</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
+    <div v-else class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Course</th>
+            <th>Subject</th>
+            <th>Status</th>
+            <th>Created</th>
+            <th class="actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="examType in examTypes" :key="examType.id">
+            <td>
+              <strong>{{ examType.name }}</strong>
+            </td>
+            <td>{{ examType.description }}</td>
+            <td>{{ getCourseName(examType.courseId) }}</td>
+            <td>{{ getSubjectName(examType.subjectId) }}</td>
+            <td>
+              <button
+                @click="toggleStatus(examType.id)"
+                :class="[
+                  'status-badge',
+                  examType.status === 'ACTIVE'
+                    ? 'status-active'
+                    : 'status-inactive',
+                ]"
+              >
+                {{ examType.status }}
+              </button>
+            </td>
+            <td>
+              {{
+                examType.createdAt
+                  ? new Date(examType.createdAt).toLocaleDateString()
+                  : "-"
+              }}
+            </td>
+            <td class="actions">
+              <button @click="editExamType(examType)" class="action-link edit">
+                Edit
+              </button>
+              <button
+                @click="deleteExamType(examType.id)"
+                class="action-link delete"
+              >
+                Delete
+              </button>
+            </td>
+          </tr>
+          <tr v-if="examTypes.length === 0">
+            <td colspan="7" class="empty-state">
+              No exam types found. Create one to get started.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
     <!-- Modal -->
     <teleport to="body">
       <div v-if="showModal" class="modal-overlay">
         <div class="modal-box">
-          <h2>{{ isEditing ? 'Edit Exam Type' : 'Add New Exam Type' }}</h2>
+          <h2>{{ isEditing ? "Edit Exam Type" : "Add New Exam Type" }}</h2>
 
           <!-- Form -->
           <form @submit.prevent="submitForm">
@@ -105,9 +121,9 @@
             <!-- Subject Select -->
             <div class="form-group">
               <label>Subject</label>
-              <select 
-                v-model="form.subjectId" 
-                required 
+              <select
+                v-model="form.subjectId"
+                required
                 class="form-control"
                 :disabled="!filteredSubjects.length"
               >
@@ -115,7 +131,9 @@
                 <option v-for="s in filteredSubjects" :key="s.id" :value="s.id">
                   {{ s.name }}
                 </option>
-                <option v-if="filteredSubjects.length === 0" disabled>No subjects available</option>
+                <option v-if="filteredSubjects.length === 0" disabled>
+                  No subjects available
+                </option>
               </select>
             </div>
 
@@ -142,9 +160,15 @@
             <!-- Form Actions -->
             <div class="form-actions">
               <button type="submit" class="btn btn-primary">
-                {{ isEditing ? 'Update' : 'Create' }}
+                {{ isEditing ? "Update" : "Create" }}
               </button>
-              <button type="button" @click="closeModal()" class="btn btn-secondary">Cancel</button>
+              <button
+                type="button"
+                @click="closeModal()"
+                class="btn btn-secondary"
+              >
+                Cancel
+              </button>
             </div>
           </form>
         </div>
@@ -157,11 +181,19 @@
         <div class="modal-box">
           <h3>Delete Exam Type</h3>
           <p class="confirm-text">
-            Are you sure you want to delete this exam type? This action cannot be undone.
+            Are you sure you want to delete this exam type? This action cannot
+            be undone.
           </p>
           <div class="form-actions">
-            <button @click="confirmDelete()" class="btn btn-danger">Delete</button>
-            <button @click="showDeleteConfirm = false" class="btn btn-secondary">Cancel</button>
+            <button @click="confirmDelete()" class="btn btn-danger">
+              Delete
+            </button>
+            <button
+              @click="showDeleteConfirm = false"
+              class="btn btn-secondary"
+            >
+              Cancel
+            </button>
           </div>
         </div>
       </div>
@@ -170,99 +202,96 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
-import { examTypesService } from '@/api/examService'
+import { ref, onMounted, watch } from "vue";
+import { examTypesService } from "@/api/examService";
 
 interface ExamType {
-  id: string
-  name: string
-  description: string
-  status: 'ACTIVE' | 'INACTIVE'
-  createdAt?: string | Date
-  courseId: number | null
-  subjectId: number | null
+  id: string;
+  name: string;
+  description: string;
+  status: "ACTIVE" | "INACTIVE";
+  createdAt?: string | Date;
+  courseId: number | null;
+  subjectId: number | null;
 }
 
 interface CourseOption {
-  id: number
-  name: string
+  id: number;
+  name: string;
 }
 
 interface SubjectOption {
-  id: number
-  name: string
-  courseId: number
+  id: number;
+  name: string;
+  courseId: number;
 }
 
+const examTypes = ref<ExamType[]>([]);
+const loading = ref(false);
+const showModal = ref(false);
+const showDeleteConfirm = ref(false);
+const isEditing = ref(false);
+const successMessage = ref("");
+const errorMessage = ref("");
+const deleteId = ref<string | null>(null);
 
-const examTypes = ref<ExamType[]>([])
-const loading = ref(false)
-const showModal = ref(false)
-const showDeleteConfirm = ref(false)
-const isEditing = ref(false)
-const successMessage = ref('')
-const errorMessage = ref('')
-const deleteId = ref<string | null>(null)
-
-const courses = ref<CourseOption[]>([])
-const subjects = ref<SubjectOption[]>([])
-const filteredSubjects = ref<SubjectOption[]>([])
-
+const courses = ref<CourseOption[]>([]);
+const subjects = ref<SubjectOption[]>([]);
+const filteredSubjects = ref<SubjectOption[]>([]);
 
 const form = ref<{
-  id?: string
-  name: string
-  description: string
-  status: string
-  courseId: number | null
-  subjectId: number | null
+  id?: string;
+  name: string;
+  description: string;
+  status: string;
+  courseId: number | null;
+  subjectId: number | null;
 }>({
   id: undefined,
-  name: '',
-  description: '',
-  status: 'ACTIVE',
+  name: "",
+  description: "",
+  status: "ACTIVE",
   courseId: null,
   subjectId: null,
-})
+});
 
 onMounted(async () => {
-  await fetchCourses()    
-  await fetchSubjects()  
-  await fetchExamTypes() 
-})
+  await fetchCourses();
+  await fetchSubjects();
+  await fetchExamTypes();
+});
 
 function getCourseName(courseId: number | string | null) {
-  if (courseId == null) return '-'
-  const course = courses.value.find(c => c.id === Number(courseId))
-  return course ? course.name : '-'
+  if (courseId == null) return "-";
+  const course = courses.value.find((c) => c.id === Number(courseId));
+  return course ? course.name : "-";
 }
 
 function getSubjectName(subjectId: number | string | null) {
-  if (subjectId == null) return '-'
-  const subject = subjects.value.find(s => s.id === Number(subjectId))
-  return subject ? subject.name : '-'
+  if (subjectId == null) return "-";
+  const subject = subjects.value.find((s) => s.id === Number(subjectId));
+  return subject ? subject.name : "-";
 }
 
-
 async function fetchCourses() {
-  const res = await fetch('http://localhost:3000/courses')
-  const data = await res.json()
-  console.log('Courses raw:', data)
+  const res = await fetch("http://localhost:3000/courses");
+  const data = await res.json();
+  console.log("Courses raw:", data);
   courses.value = data.map((c: any) => ({
     id: Number(c.id),
     name: c.courseName,
-  }))
+  }));
 }
 
 async function fetchSubjects() {
-  const res = await fetch('http://localhost:3000/curriculum')
-  const data = await res.json()
-  console.log('Subjects raw:', data)
+  const res = await fetch("http://localhost:3000/curriculum");
+  const data = await res.json();
+  console.log("Subjects raw:", data);
   subjects.value = data.map((s: any) => ({
     id: Number(s.id),
     name: s.name,
     courseId: Number(s.courseId) || null,
-  }))
+  }));
 }
 
 watch(
@@ -276,16 +305,15 @@ watch(
     }
 
     filteredSubjects.value = subjects.value.filter(
-      (s) => s.courseId === courseId
+      (s) => s.courseId === courseId,
     );
-  }
+  },
 );
 
-
 async function fetchExamTypes() {
-  loading.value = true
+  loading.value = true;
   try {
-    const response = await examTypesService.getAll(0, 100)
+    const response = await examTypesService.getAll(0, 100);
 
     examTypes.value = response.data.map((e: any) => ({
       id: e.id,
@@ -293,101 +321,102 @@ async function fetchExamTypes() {
       description: e.description,
       status: e.status,
       createdAt: e.createdAt,
-      courseId: e.course_id != null ? Number(e.course_id) : null,   // ← use backend field
-      subjectId: e.subject_id != null ? Number(e.subject_id) : null, // ← use backend field
-    }))
-
+      courseId: e.course?.id ? Number(e.course.id) : null,
+      subjectId: e.subject?.id ? Number(e.subject.id) : null,
+    }));
   } catch (error: any) {
-    errorMessage.value = error.response?.data?.message || 'Failed to load exam types'
+    errorMessage.value =
+      error.response?.data?.message || "Failed to load exam types";
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
-
 function openModal() {
-  isEditing.value = false
+  isEditing.value = false;
   form.value = {
-    name: '',
-    description: '',
-    status: 'ACTIVE',
+    name: "",
+    description: "",
+    status: "ACTIVE",
     courseId: null,
     subjectId: null,
-  }
-  showModal.value = true
+  };
+  showModal.value = true;
 }
 
 function editExamType(examType: any) {
-  isEditing.value = true
+  isEditing.value = true;
 
   form.value = {
     ...examType,
     courseId: examType.courseId,
     subjectId: examType.subjectId,
-  }
+  };
 
   filteredSubjects.value = subjects.value.filter(
-    (s) => s.courseId === examType.courseId
-  )
+    (s) => s.courseId === examType.courseId,
+  );
 
-  showModal.value = true
+  showModal.value = true;
 }
 
 function closeModal() {
-  showModal.value = false
+  showModal.value = false;
   form.value = {
-    name: '',
-    description: '',
-    status: 'ACTIVE',
+    name: "",
+    description: "",
+    status: "ACTIVE",
     courseId: null,
     subjectId: null,
-  }
+  };
 }
-
 
 async function submitForm() {
   try {
     if (isEditing.value && form.value.id) {
-      await examTypesService.update((form.value as any).id, form.value)
-      successMessage.value = 'Exam type updated successfully'
+      await examTypesService.update((form.value as any).id, form.value);
+      successMessage.value = "Exam type updated successfully";
     } else {
-      await examTypesService.create(form.value)
-      successMessage.value = 'Exam type created successfully'
+      await examTypesService.create(form.value);
+      successMessage.value = "Exam type created successfully";
     }
-    closeModal()
-    await fetchExamTypes()
-    setTimeout(() => (successMessage.value = ''), 3000)
+    closeModal();
+    await fetchExamTypes();
+    setTimeout(() => (successMessage.value = ""), 3000);
   } catch (error: any) {
-    errorMessage.value = error.response?.data?.message || 'Failed to save exam type'
+    errorMessage.value =
+      error.response?.data?.message || "Failed to save exam type";
   }
 }
 
 async function toggleStatus(id: string) {
   try {
-    await examTypesService.toggleStatus(id)
-    successMessage.value = 'Status updated successfully'
-    await fetchExamTypes()
-    setTimeout(() => (successMessage.value = ''), 3000)
+    await examTypesService.toggleStatus(id);
+    successMessage.value = "Status updated successfully";
+    await fetchExamTypes();
+    setTimeout(() => (successMessage.value = ""), 3000);
   } catch (error: any) {
-    errorMessage.value = error.response?.data?.message || 'Failed to toggle status'
+    errorMessage.value =
+      error.response?.data?.message || "Failed to toggle status";
   }
 }
 
 function deleteExamType(id: string) {
-  deleteId.value = id
-  showDeleteConfirm.value = true
+  deleteId.value = id;
+  showDeleteConfirm.value = true;
 }
 
 async function confirmDelete() {
-  if (!deleteId.value) return
+  if (!deleteId.value) return;
   try {
-    await examTypesService.delete(deleteId.value)
-    successMessage.value = 'Exam type deleted successfully'
-    await fetchExamTypes()
-    showDeleteConfirm.value = false
-    setTimeout(() => (successMessage.value = ''), 3000)
+    await examTypesService.delete(deleteId.value);
+    successMessage.value = "Exam type deleted successfully";
+    await fetchExamTypes();
+    showDeleteConfirm.value = false;
+    setTimeout(() => (successMessage.value = ""), 3000);
   } catch (error: any) {
-    errorMessage.value = error.response?.data?.message || 'Failed to delete exam type'
+    errorMessage.value =
+      error.response?.data?.message || "Failed to delete exam type";
   }
 }
 </script>
@@ -398,7 +427,7 @@ async function confirmDelete() {
   padding: 2rem;
   background-color: #f9fafb;
   min-height: 100vh;
-  font-family: 'Nunito', sans-serif;
+  font-family: "Nunito", sans-serif;
 }
 
 /* Header */
