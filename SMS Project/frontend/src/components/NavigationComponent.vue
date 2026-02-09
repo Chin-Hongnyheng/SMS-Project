@@ -57,8 +57,8 @@ const fas = {
   transcript: "rectangle-list",
   student: "user-graduate",
   logout: "angle-right",
-  myExams: "file-lines",
-  myResults: "chart-bar",
+  myExams: "clipboard-check",
+  myResults: "trophy",
 };
 
 const route = useRoute();
